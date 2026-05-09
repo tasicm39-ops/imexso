@@ -37,32 +37,6 @@
   }
 }
 
-// Home sliders (most searched/latest): on xs screens Bootstrap `col-sm-*` does not apply.
-// Ensure each slick slide card takes full width so one normal card is shown.
-.car-slider-three--home {
-  .slick-list {
-    margin-left: 0;
-    margin-right: 0;
-  }
-
-  .slick-slide {
-    min-width: 0;
-    height: auto;
-  }
-
-  .slick-slide > div,
-  .car-block-five {
-    width: 100%;
-    max-width: 100%;
-    box-sizing: border-box;
-  }
-
-  .car-block-five .inner-box {
-    width: 100%;
-    max-width: 100%;
-  }
-}
-
 .related-car-card-img {
   width: 100% !important;
   height: auto !important;
@@ -423,6 +397,110 @@
 
 .boxcar-banner-section-five .image-column {
   margin-top: -80px;
+}
+
+/* Home hero search: keep the white filter bar usable on tablets/phones (width, overlap, wrap). */
+.home-hero-search.boxcar-banner-section-five {
+  /* Decorative car image can stack over the form (negative margins); never steal taps from search. */
+  .image-column {
+    pointer-events: none;
+  }
+
+  .banner-content .form-tabs {
+    position: relative;
+    z-index: 6;
+  }
+
+  @media (max-width: 991px) {
+    .banner-content-three .boxcar-container > .banner-content {
+      position: relative;
+      z-index: 4;
+      width: 100%;
+      max-width: 100%;
+      padding-left: 12px;
+      padding-right: 12px;
+      box-sizing: border-box;
+    }
+
+    .banner-content-three .boxcar-container > .image-column {
+      position: relative;
+      z-index: 1;
+      margin-top: 24px;
+    }
+
+    .banner-content .form-tab-pane form {
+      display: flex;
+      flex-wrap: wrap;
+      height: auto;
+      min-height: 76px;
+      align-items: stretch;
+      gap: 10px;
+      padding: 12px 14px;
+      box-sizing: border-box;
+      overflow: visible;
+    }
+
+    .banner-content .form-tab-pane form .form_boxes {
+      flex: 1 1 calc(33.333% - 10px);
+      min-width: min(100%, 148px);
+      width: auto;
+      height: auto;
+      min-height: 60px;
+      margin-bottom: 0;
+      border: 1px solid #eaeaea;
+      border-radius: 14px;
+      overflow: visible;
+    }
+
+    .banner-content .form-tab-pane form .form_boxes:before {
+      display: none;
+    }
+
+    .banner-content .form-submit {
+      flex: 0 0 auto;
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+    }
+
+    .banner-content .form-tab-pane.current .drop-menu.active {
+      z-index: 30;
+    }
+  }
+
+  @media (max-width: 767px) {
+    .banner-content h2 {
+      font-size: clamp(26px, 7vw, 40px);
+      line-height: 1.15;
+      margin-bottom: 20px;
+    }
+
+    .banner-content .form-tab-pane form .form_boxes {
+      flex: 1 1 calc(50% - 6px);
+      min-width: 0;
+    }
+
+    .banner-content .form-submit {
+      flex: 1 1 100%;
+      margin-left: 0;
+      justify-content: center;
+      padding-top: 4px;
+    }
+
+    .banner-content .form-submit button {
+      width: min(100%, 280px);
+    }
+
+    .banner-content .form-tab-pane form .drop-menu .select {
+      min-height: 56px;
+    }
+  }
+
+  @media (max-width: 479px) {
+    .banner-content .form-tab-pane form .form_boxes {
+      flex: 1 1 100%;
+    }
+  }
 }
 // grid new gallery
 /* components/ResponsiveGallery.module.css */

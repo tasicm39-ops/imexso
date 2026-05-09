@@ -1,31 +1,59 @@
 # Imexso
 
-Monorepo layout:
+Monorepo:
 
-- **`imexso-frontend-main/`** — Next.js app (run `npm install` / `npm run dev` inside `imexso-frontend-main/imexso-frontend-main/`, or use wrapper scripts in `imexso-frontend-main/package.json`).
-- **`imexso-main/`** — Laravel API (see `imexso-main/imexso-main/`).
+| Path | Stack |
+|------|--------|
+| `imexso-frontend-main/imexso-frontend-main/` | Next.js 14 (App Router) |
+| `imexso-main/imexso-main/` | Laravel API + Sanctum |
 
-Copy `.env` / `.env.local` from your secure storage; they are not committed.
+---
 
-## Publish to GitHub (from this folder)
+## Handoff (for a mentor / reviewer)
 
-Git is already initialized on branch `main` with an initial commit. Create an **empty** repository on GitHub (no README, no `.gitignore` template), then:
+**Prerequisites:** Node 18+ (or as in your `package.json`), PHP 8.2+, Composer, npm.
 
-```bash
-cd /home/milos/Downloads/imexso-frontend-main
-git remote add origin https://github.com/<YOUR_GITHUB_USERNAME>/<REPO_NAME>.git
-git push -u origin main
-```
-
-Use your real username and repo name (for example `imexso`). For SSH, use `git@github.com:<YOUR_GITHUB_USERNAME>/<REPO_NAME>.git` instead.
-
-If Git complains about the commit author, set your identity once, then amend:
+### 1. Backend (Laravel)
 
 ```bash
-git config user.name "Your Name"
-git config user.email "your.email@example.com"
-git commit --amend --reset-author --no-edit
-git push -u origin main
+cd imexso-main/imexso-main
+cp .env.example .env
+php artisan key:generate
+composer install
+php artisan migrate
+php artisan serve
 ```
 
-Optional: install [GitHub CLI](https://cli.github.com/) (`gh`), run `gh auth login`, then `gh repo create imexso --private --source=. --remote=origin --push` from this directory to create the remote and push in one step.
+Default `.env.example` uses **SQLite** (`DB_CONNECTION=sqlite`). Ensure `database/database.sqlite` exists if you keep SQLite, or switch to MySQL in `.env` and create the database.
+
+API runs at **`http://127.0.0.1:8000`** (matches `APP_URL` in `.env.example`).
+
+### 2. Frontend (Next.js)
+
+```bash
+cd imexso-frontend-main/imexso-frontend-main
+cp .env.example .env.local
+npm install
+npm run dev
+```
+
+App runs at **`http://localhost:3000`**.  
+`NEXT_PUBLIC_API_URL` in `.env.local` must match the Laravel URL above; Next rewrites `/api/*` and `/sanctum/*` to that host (`next.config.mjs`).
+
+### 3. Smoke test
+
+- Register / login (reCAPTCHA keys optional if disabled on backend).
+- Home → hero search → **Inventory** with filters.
+- Mobile width: header menu, inventory list.
+
+### 4. Secrets
+
+Do **not** commit real `.env` or `.env.local`. Share production-like values with the mentor over a **private channel** if needed.
+
+---
+
+## Repo layout reminder
+
+- Wrapper scripts also live in `imexso-frontend-main/package.json` (`npm run dev` delegates into the inner app folder).
+
+Remote: `origin` → GitHub (`imexso` under your account).

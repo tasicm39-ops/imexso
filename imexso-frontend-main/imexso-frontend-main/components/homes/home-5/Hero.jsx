@@ -2,7 +2,6 @@
 import React, {useEffect, useRef, useState} from "react";
 import Image from "next/image";
 import SelectComponent from "@/components/common/SelectComponent";
-import Link from "next/link";
 import {useRouter} from "next/navigation";
 import {apiGet} from "@/lib/api";
 import {useAuth} from "@/context/AuthContext";
@@ -79,7 +78,10 @@ export default function Hero() {
         <div
             style={{height: 200, width: '100%', marginTop: -2, backgroundColor: '#050b20', position: 'absolute'}}>
         </div>
-        <section className="boxcar-banner-section-five section-radius-top" style={{marginTop: 0}}>
+        <section
+          className="boxcar-banner-section-five section-radius-top home-hero-search"
+          style={{ marginTop: 0 }}
+        >
           <div className="banner-content-three">
             <div className="boxcar-container">
               <div className="banner-content">
@@ -138,14 +140,15 @@ export default function Hero() {
             <div className="image-column">
               <div className="image-box">
                 <figure className="image">
-                  <Link href="/inventory">
-                    <Image
-                        alt=""
-                        src="/images/banner/transparent-1216x738.png"
-                        width={500}
-                        height={500}
-                    />
-                  </Link>
+                  {/* No Link: negative margins stack this over the form on mobile; a link to /inventory stole taps from the search button. */}
+                  <Image
+                    alt=""
+                    src="/images/banner/transparent-1216x738.png"
+                    width={500}
+                    height={500}
+                    className="hero-banner-decorative-img"
+                    sizes="(max-width: 768px) 100vw, 500px"
+                  />
                 </figure>
               </div>
             </div>

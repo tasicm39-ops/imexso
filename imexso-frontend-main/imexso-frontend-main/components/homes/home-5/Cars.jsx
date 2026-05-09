@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { apiGet } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import { useLocale } from "@/context/LocaleContext";
+import { useHomeCarSlidesToShow } from "@/hooks/useHomeCarSlidesToShow";
 
 function formatPrice(price) {
   if (!price && price !== 0) return "N/A";
@@ -47,6 +48,7 @@ function CarImage({ src, alt, width, height }) {
 export default function Cars() {
   const { isAuthenticated, isValidated } = useAuth();
   const { t } = useLocale();
+  const slidesToShow = useHomeCarSlidesToShow();
   const [cars, setCars] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -137,24 +139,16 @@ export default function Cars() {
           <div className="tab-pane fade show active" id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab">
             <Slider
               slidesToScroll={1}
-              slidesToShow={4}
-              infinite={cars.length > 4}
-              responsive={[
-                { breakpoint: 1600, settings: { slidesToShow: 4, slidesToScroll: 1, arrows: true, infinite: cars.length > 4 } },
-                { breakpoint: 1300, settings: { slidesToShow: 3, slidesToScroll: 1, infinite: cars.length > 3 } },
-                { breakpoint: 991, settings: { slidesToShow: 2, slidesToScroll: 1, infinite: cars.length > 2 } },
-                { breakpoint: 767, settings: { slidesToShow: 1, slidesToScroll: 1 } },
-                { breakpoint: 576, settings: { slidesToShow: 1, slidesToScroll: 1 } },
-                { breakpoint: 480, settings: { slidesToShow: 1, slidesToScroll: 1 } },
-              ]}
+              slidesToShow={slidesToShow}
+              infinite={cars.length > slidesToShow}
               arrows
-              className="car-slider-three car-slider-three--home"
+              className="row car-slider-three"
             >
               {cars.map((car) => {
                 const imageUrl = car.photos?.[0]?.url || null;
                 const title = [car.make, car.model].filter(Boolean).join(" ") || "Unknown Vehicle";
                 return (
-                  <div key={car.id} className="box-car car-block-five col-12 col-md-6 col-lg-3">
+                  <div key={car.id} className="box-car car-block-five col-lg-3 col-md-6 col-sm-12">
                     <div className="inner-box">
                       <div className="image-box">
                         <div className="slider-thumb">

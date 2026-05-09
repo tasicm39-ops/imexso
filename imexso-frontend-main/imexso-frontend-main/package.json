@@ -1,0 +1,28 @@
+{
+  "name": "imexso-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@next/swc-linux-x64-gnu": "^16.2.6",
+    "@popperjs/core": "^2.11.8",
+    "bootstrap": "^5.3.8",
+    "js-cookie": "^3.0.5",
+    "next": "14.2.35",
+    "photoswipe": "^5.4.4",
+    "rc-slider": "^11.1.9",
+    "react": "^18",
+    "react-dom": "^18",
+    "react-modal-video": "^2.0.2",
+    "react-photoswipe-gallery": "^4.0.0",
+    "react-slick": "^0.31.0",
+    "sass": "^1.98.0",
+    "slick-carousel": "^1.8.1",
+    "wowjs": "^1.1.3"
+  }
+}

@@ -1,0 +1,9 @@
+# Workspace / tooling noise (not part of the app)
+.cache/
+.chrome-tmp/
+.cursor-tmp/
+.config/
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,11 @@
+{
+  "name": "imexso-frontend-workspace",
+  "private": true,
+  "description": "Wrapper so npm works from C:\\dev\\imexso-frontend-main; app lives in imexso-frontend-main/",
+  "scripts": {
+    "dev": "npm --prefix imexso-frontend-main run dev",
+    "build": "npm --prefix imexso-frontend-main run build",
+    "start": "npm --prefix imexso-frontend-main run start",
+    "lint": "npm --prefix imexso-frontend-main run lint"
+  }
+}

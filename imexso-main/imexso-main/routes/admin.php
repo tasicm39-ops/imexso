@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\AnnouncementController;
 use App\Http\Controllers\Admin\CarController;
+use App\Http\Controllers\Admin\CarHistoryController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\EventController;
 use App\Http\Controllers\Admin\FavouriteController;
@@ -19,9 +20,11 @@ Route::post('users/{user}/reject', [UserController::class, 'reject'])->name('adm
 Route::post('users/{user}/toggle-admin', [UserController::class, 'toggleAdmin'])->name('admin.users.toggle-admin');
 Route::post('users/{user}/client-id', [UserController::class, 'updateClientId'])->name('admin.users.update-client-id');
 
+Route::get('cars/history', [CarHistoryController::class, 'index'])->name('admin.cars.history.index');
 Route::get('cars', [CarController::class, 'index'])->name('admin.cars.index');
 Route::get('cars/import', [CarController::class, 'create'])->name('admin.cars.import');
 Route::post('cars/import', [CarController::class, 'store'])->name('admin.cars.import.store');
+Route::post('cars/import-vendu', [CarController::class, 'storeVendu'])->name('admin.cars.import-vendu');
 Route::get('cars/{car}/marketing', [CarController::class, 'marketing'])->name('admin.cars.marketing');
 Route::post('cars/{car}/marketing', [CarController::class, 'updateMarketing'])->name('admin.cars.marketing.update');
 

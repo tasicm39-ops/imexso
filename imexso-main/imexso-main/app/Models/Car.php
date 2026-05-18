@@ -14,10 +14,15 @@ class Car extends Model
     /** @use HasFactory<CarFactory> */
     use HasFactory;
 
+    public $incrementing = false;
+
+    protected $keyType = 'int';
+
     /**
      * @var list<string>
      */
     protected $fillable = [
+        'id',
         'id_produit',
         'vin',
         'make',
@@ -78,6 +83,7 @@ class Car extends Model
         'supplementary_equipment',
         'standard_equipment',
         'sync_status',
+        'stock_status',
         'last_synced_at',
     ];
 
@@ -184,6 +190,14 @@ class Car extends Model
     }
 
     /**
+     * @return HasMany<CarHistory, $this>
+     */
+    public function history(): HasMany
+    {
+        return $this->hasMany(CarHistory::class)->orderByDesc('created_at');
+    }
+
+    /**
      * @param  Builder<Car>  $query
      * @return Builder<Car>
      */
@@ -199,5 +213,21 @@ class Car extends Model
     public function scopeSold(Builder $query): Builder
     {
         return $query->where('sync_status', 'sold');
+    }
+
+    public function markAvailable(): void
+    {
+        $this->forceFill([
+            'stock_status' => 'AVAILABLE',
+            'sync_status' => 'active',
+        ])->save();
+    }
+
+    public function markSold(): void
+    {
+        $this->forceFill([
+            'stock_status' => 'SOLD',
+            'sync_status' => 'sold',
+        ])->save();
     }
 }

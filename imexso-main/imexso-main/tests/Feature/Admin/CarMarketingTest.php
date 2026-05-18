@@ -60,7 +60,7 @@ class CarMarketingTest extends TestCase
         $car = Car::factory()->create();
 
         $response = $this->actingAs($this->admin)
-            ->post(route('admin.cars.marketing.update', $car), [
+            ->post(route('admin.cars.marketing.update', $car), $this->validMarketingPayload([
                 'limited_stock_enabled' => true,
                 'limited_stock_count' => 5,
                 'new_price_enabled' => false,
@@ -69,7 +69,7 @@ class CarMarketingTest extends TestCase
                 'promotion_label' => 'Big Sale!',
                 'badge_text' => null,
                 'is_active' => true,
-            ]);
+            ]));
 
         $response->assertRedirect(route('admin.cars.marketing', $car))
             ->assertSessionHas('success');
@@ -94,7 +94,7 @@ class CarMarketingTest extends TestCase
         ]);
 
         $this->actingAs($this->admin)
-            ->post(route('admin.cars.marketing.update', $car), [
+            ->post(route('admin.cars.marketing.update', $car), $this->validMarketingPayload([
                 'limited_stock_enabled' => true,
                 'limited_stock_count' => 3,
                 'new_price_enabled' => true,
@@ -103,7 +103,7 @@ class CarMarketingTest extends TestCase
                 'promotion_label' => null,
                 'badge_text' => 'Best Deal',
                 'is_active' => true,
-            ]);
+            ]));
 
         $this->assertDatabaseCount('car_marketings', 1);
         $this->assertDatabaseHas('car_marketings', [
@@ -120,12 +120,9 @@ class CarMarketingTest extends TestCase
         $car = Car::factory()->create();
 
         $response = $this->actingAs($this->admin)
-            ->post(route('admin.cars.marketing.update', $car), [
+            ->post(route('admin.cars.marketing.update', $car), $this->validMarketingPayload([
                 'limited_stock_enabled' => 'not-boolean',
-                'new_price_enabled' => true,
-                'promotion_enabled' => true,
-                'is_active' => true,
-            ]);
+            ]));
 
         $response->assertSessionHasErrors('limited_stock_enabled');
     }
@@ -142,5 +139,25 @@ class CarMarketingTest extends TestCase
             ->get(route('admin.cars.index'));
 
         $response->assertOk();
+    }
+
+    /**
+     * @param  array<string, mixed>  $overrides
+     * @return array<string, mixed>
+     */
+    private function validMarketingPayload(array $overrides = []): array
+    {
+        return array_merge([
+            'limited_stock_enabled' => false,
+            'limited_stock_count' => null,
+            'new_price_enabled' => false,
+            'new_price_amount' => null,
+            'promotion_enabled' => false,
+            'promotion_label' => null,
+            'badge_text' => null,
+            'sold_enabled' => false,
+            'sold_visible_days' => 5,
+            'is_active' => true,
+        ], $overrides);
     }
 }

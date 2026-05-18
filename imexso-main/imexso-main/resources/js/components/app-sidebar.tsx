@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { BookOpen, Car, FolderGit2, Heart, LayoutGrid, Megaphone, Search, Users, Activity, FileText, Mail } from 'lucide-react';
+import { BookOpen, Car, FolderGit2, Heart, History, LayoutGrid, Megaphone, Search, Users, Activity, FileText, Mail } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
@@ -31,6 +31,11 @@ const adminNavItems: NavItem[] = [
         title: 'Cars',
         href: admin.cars.index(),
         icon: Car,
+    },
+    {
+        title: 'Car History',
+        href: admin.cars.history.index(),
+        icon: History,
     },
     {
         title: 'Favourites',

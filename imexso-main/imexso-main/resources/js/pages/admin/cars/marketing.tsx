@@ -1,8 +1,32 @@
-import { Head, router, usePage } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import AppLayout from '@/layouts/app-layout';
 import admin from '@/routes/admin';
 import type { BreadcrumbItem } from '@/types';
+
+type HistoryEntry = {
+    id: number;
+    car_id: number;
+    status: string;
+    buyer_info: Record<string, string> | null;
+    created_at: string;
+};
+
+const HISTORY_STATUS_STYLES: Record<string, string> = {
+    IMPORTED: 'bg-blue-100 text-blue-800',
+    AVAILABLE: 'bg-green-100 text-green-800',
+    SOLD: 'bg-red-100 text-red-800',
+};
+
+function formatHistoryDate(dateStr: string): string {
+    return new Date(dateStr).toLocaleString('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+    });
+}
 
 type CarPhoto = {
     id: number;
@@ -12,10 +36,13 @@ type CarPhoto = {
 
 type Car = {
     id: number;
+    id_produit: string;
     make: string;
     model: string;
     trim_level: string;
     professional_price: string;
+    stock_status?: string;
+    sync_status?: string;
     photos: CarPhoto[];
 };
 
@@ -37,9 +64,11 @@ type Marketing = {
 type Props = {
     car: Car;
     marketing: Marketing;
+    history: { data: HistoryEntry[] };
 };
 
-export default function CarMarketing({ car, marketing }: Props) {
+export default function CarMarketing({ car, marketing, history }: Props) {
+    const historyEntries = history?.data ?? [];
     const { flash } = usePage<{ flash: { success?: string; error?: string } }>().props;
 
     const breadcrumbs: BreadcrumbItem[] = [
@@ -93,6 +122,10 @@ export default function CarMarketing({ car, marketing }: Props) {
                         <h1 className="text-2xl font-semibold">Marketing Settings</h1>
                         <p className="mt-1 text-sm text-muted-foreground">
                             {car.make} {car.model} {car.trim_level && `- ${car.trim_level}`}
+                        </p>
+                        <p className="mt-1 font-mono text-xs text-muted-foreground">
+                            XML id: {car.id} · Ref: {car.id_produit}
+                            {car.stock_status && ` · ${car.stock_status}`}
                         </p>
                     </div>
                     <button
@@ -256,6 +289,58 @@ export default function CarMarketing({ car, marketing }: Props) {
                                 </p>
                             </div>
                         </div>
+                    </div>
+
+                    <div className="rounded-xl border border-sidebar-border/70 p-6 dark:border-sidebar-border">
+                        <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+                            <h2 className="text-lg font-semibold">Import history</h2>
+                            <Link
+                                href={admin.cars.history.index.url({ query: { car_id: String(car.id) } })}
+                                className="text-sm text-primary hover:underline"
+                            >
+                                View all history
+                            </Link>
+                        </div>
+                        {historyEntries.length === 0 ? (
+                            <p className="text-sm text-muted-foreground">
+                                No history yet. Entries appear after cars.xml import (IMPORTED) and vendu.xml (SOLD).
+                            </p>
+                        ) : (
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-sm">
+                                    <thead className="border-b text-left text-xs uppercase text-muted-foreground">
+                                        <tr>
+                                            <th className="pb-2 pr-4">Date</th>
+                                            <th className="pb-2 pr-4">Status</th>
+                                            <th className="pb-2">Buyer / details</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {historyEntries.map((entry) => (
+                                            <tr key={entry.id} className="border-b border-dashed last:border-0">
+                                                <td className="py-2 pr-4 whitespace-nowrap">
+                                                    {formatHistoryDate(entry.created_at)}
+                                                </td>
+                                                <td className="py-2 pr-4">
+                                                    <span
+                                                        className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${HISTORY_STATUS_STYLES[entry.status] ?? 'bg-gray-100'}`}
+                                                    >
+                                                        {entry.status}
+                                                    </span>
+                                                </td>
+                                                <td className="py-2 text-xs text-muted-foreground">
+                                                    {entry.buyer_info && Object.keys(entry.buyer_info).length > 0
+                                                        ? Object.entries(entry.buyer_info)
+                                                              .map(([k, v]) => `${k}: ${v}`)
+                                                              .join(' · ')
+                                                        : '—'}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
                     </div>
 
                     <button

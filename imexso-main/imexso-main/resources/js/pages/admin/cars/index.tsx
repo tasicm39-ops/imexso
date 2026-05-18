@@ -1,4 +1,5 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
+import { AdminFilterSelect } from '@/components/admin-filter-select';
 import CarStatsDialog from '@/components/car-stats-dialog';
 import SparkBar from '@/components/spark-bar';
 import AppLayout from '@/layouts/app-layout';
@@ -30,6 +31,7 @@ type Car = {
     fuel_type: string;
     horsepower: number;
     manufacturing_year: number | null;
+    registration_date: string | null;
     color: string;
     mileage: number;
     professional_price: string;
@@ -57,6 +59,11 @@ type Props = {
         search?: string;
     };
     makes: string[];
+    counts: {
+        active: number;
+        sold: number;
+        total: number;
+    };
     offerStats: Record<number, DayStat[]>;
     viewStats: Record<number, DayStat[]>;
 };
@@ -81,6 +88,20 @@ function formatMileage(km: number): string {
     return new Intl.NumberFormat('en-EU').format(km) + ' km';
 }
 
+function displayYear(car: Car): string | number {
+    if (car.manufacturing_year) {
+        return car.manufacturing_year;
+    }
+
+    if (car.registration_date) {
+        const year = new Date(car.registration_date).getFullYear();
+
+        return Number.isNaN(year) ? '—' : year;
+    }
+
+    return '—';
+}
+
 function statusBadge(status: string) {
     const styles: Record<string, string> = {
         active: 'bg-green-100 text-green-700',
@@ -94,7 +115,7 @@ function statusBadge(status: string) {
     );
 }
 
-export default function CarsIndex({ cars, filters, makes, offerStats, viewStats }: Props) {
+export default function CarsIndex({ cars, filters, makes, counts, offerStats, viewStats }: Props) {
     const { flash } = usePage<{ flash: { success?: string; error?: string } }>().props;
 
     function handleFilter(key: string, value: string) {
@@ -108,7 +129,18 @@ export default function CarsIndex({ cars, filters, makes, offerStats, viewStats 
                 <div className="flex items-center justify-between">
                     <h1 className="text-2xl font-semibold">Cars</h1>
                     <div className="flex items-center gap-3">
-                        <span className="text-sm text-muted-foreground">{cars.total} cars total</span>
+                        <span className="text-sm text-muted-foreground">
+                            {counts.active} active · {counts.sold} sold · {counts.total} total
+                            {filters.sync_status && filters.sync_status !== 'all'
+                                ? ` · showing ${cars.total} filtered`
+                                : ''}
+                        </span>
+                        <Link
+                            href={admin.cars.history.index.url()}
+                            className="rounded-md border px-4 py-2 text-sm font-medium hover:bg-muted"
+                        >
+                            Car History
+                        </Link>
                         <Link
                             href={admin.cars.import.url()}
                             className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
@@ -137,25 +169,23 @@ export default function CarsIndex({ cars, filters, makes, offerStats, viewStats 
                         onChange={(e) => handleFilter('search', e.target.value)}
                         className="w-full max-w-sm rounded-md border px-3 py-2 text-sm"
                     />
-                    <select
-                        value={filters.sync_status || ''}
-                        onChange={(e) => handleFilter('sync_status', e.target.value)}
-                        className="rounded-md border px-3 py-2 text-sm"
-                    >
-                        <option value="">All Status</option>
-                        <option value="active">Active</option>
-                        <option value="sold">Sold</option>
-                    </select>
-                    <select
+                    <AdminFilterSelect
+                        value={filters.sync_status || 'active'}
+                        onValueChange={(value) => handleFilter('sync_status', value)}
+                        placeholder="All Status"
+                        options={[
+                            { value: 'active', label: 'Active (stock)' },
+                            { value: 'sold', label: 'Sold' },
+                            { value: 'all', label: 'All statuses' },
+                        ]}
+                    />
+                    <AdminFilterSelect
                         value={filters.make || ''}
-                        onChange={(e) => handleFilter('make', e.target.value)}
-                        className="rounded-md border px-3 py-2 text-sm"
-                    >
-                        <option value="">All Makes</option>
-                        {makes.map((make) => (
-                            <option key={make} value={make}>{make}</option>
-                        ))}
-                    </select>
+                        onValueChange={(value) => handleFilter('make', value)}
+                        placeholder="All Makes"
+                        options={makes.map((make) => ({ value: make, label: make }))}
+                        triggerClassName="min-w-[180px]"
+                    />
                 </div>
 
                 <div className="overflow-x-auto rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
@@ -210,7 +240,7 @@ export default function CarsIndex({ cars, filters, makes, offerStats, viewStats 
                                             <div className="font-medium">{car.make} {car.model}</div>
                                             <div className="text-xs text-muted-foreground">{car.trim_level}</div>
                                         </td>
-                                        <td className="px-4 py-3 text-muted-foreground">{car.manufacturing_year ?? '—'}</td>
+                                        <td className="px-4 py-3 text-muted-foreground">{displayYear(car)}</td>
                                         <td className="px-4 py-3 text-muted-foreground">{car.fuel_type}</td>
                                         <td className="px-4 py-3 text-muted-foreground">{car.horsepower}</td>
                                         <td className="px-4 py-3 text-muted-foreground">{formatMileage(car.mileage)}</td>
@@ -250,6 +280,14 @@ export default function CarsIndex({ cars, filters, makes, offerStats, viewStats 
                                         <td className="px-4 py-3">{statusBadge(car.sync_status)}</td>
                                         <td className="px-4 py-3">
                                             <div className="flex items-center gap-2">
+                                                <Link
+                                                    href={admin.cars.history.index.url({
+                                                        query: { car_id: String(car.id) },
+                                                    })}
+                                                    className="rounded border px-2 py-1 text-xs hover:bg-muted"
+                                                >
+                                                    History
+                                                </Link>
                                                 <Link
                                                     href={admin.cars.marketing(car.id)}
                                                     className="rounded border px-2 py-1 text-xs hover:bg-muted"

@@ -25,6 +25,9 @@ class CarMarketingFactory extends Factory
             'promotion_enabled' => false,
             'promotion_label' => null,
             'badge_text' => null,
+            'sold_enabled' => false,
+            'sold_visible_days' => 5,
+            'sold_marked_at' => null,
             'is_active' => true,
         ];
     }

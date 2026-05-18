@@ -1,5 +1,6 @@
 import { Head, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
+import { AdminFilterSelect } from '@/components/admin-filter-select';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem, User } from '@/types';
 
@@ -141,16 +142,16 @@ export default function UsersIndex({ users, filters }: Props) {
                         onChange={(e) => handleFilter('search', e.target.value)}
                         className="w-full max-w-sm rounded-md border px-3 py-2 text-sm"
                     />
-                    <select
+                    <AdminFilterSelect
                         value={filters.status || ''}
-                        onChange={(e) => handleFilter('status', e.target.value)}
-                        className="rounded-md border px-3 py-2 text-sm"
-                    >
-                        <option value="">All Users</option>
-                        <option value="pending">Pending Approval</option>
-                        <option value="validated">Validated</option>
-                        <option value="inactive">Inactive</option>
-                    </select>
+                        onValueChange={(value) => handleFilter('status', value)}
+                        placeholder="All Users"
+                        options={[
+                            { value: 'pending', label: 'Pending Approval' },
+                            { value: 'validated', label: 'Validated' },
+                            { value: 'inactive', label: 'Inactive' },
+                        ]}
+                    />
                 </div>
 
                 <div className="overflow-x-auto rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">

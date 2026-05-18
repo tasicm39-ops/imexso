@@ -1,4 +1,5 @@
 import { Head, router } from '@inertiajs/react';
+import { AdminFilterSelect } from '@/components/admin-filter-select';
 import AppLayout from '@/layouts/app-layout';
 import admin from '@/routes/admin';
 import type { BreadcrumbItem } from '@/types';
@@ -112,27 +113,25 @@ export default function OffersIndex({ offers, filters, users }: Props) {
                         onChange={(e) => handleFilter('search', e.target.value)}
                         className="w-full max-w-sm rounded-md border px-3 py-2 text-sm"
                     />
-                    <select
+                    <AdminFilterSelect
                         value={filters.user_id || ''}
-                        onChange={(e) => handleFilter('user_id', e.target.value)}
-                        className="rounded-md border px-3 py-2 text-sm"
-                    >
-                        <option value="">All Sales Users</option>
-                        {users.map((user) => (
-                            <option key={user.id} value={user.id}>
-                                {user.name} ({user.email})
-                            </option>
-                        ))}
-                    </select>
-                    <select
+                        onValueChange={(value) => handleFilter('user_id', value)}
+                        placeholder="All Sales Users"
+                        options={users.map((user) => ({
+                            value: String(user.id),
+                            label: `${user.name} (${user.email})`,
+                        }))}
+                        triggerClassName="min-w-[220px]"
+                    />
+                    <AdminFilterSelect
                         value={filters.delivery_type || ''}
-                        onChange={(e) => handleFilter('delivery_type', e.target.value)}
-                        className="rounded-md border px-3 py-2 text-sm"
-                    >
-                        <option value="">All Delivery Types</option>
-                        <option value="email">Email</option>
-                        <option value="pdf">PDF</option>
-                    </select>
+                        onValueChange={(value) => handleFilter('delivery_type', value)}
+                        placeholder="All Delivery Types"
+                        options={[
+                            { value: 'email', label: 'Email' },
+                            { value: 'pdf', label: 'PDF' },
+                        ]}
+                    />
                 </div>
 
                 <div className="overflow-x-auto rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">

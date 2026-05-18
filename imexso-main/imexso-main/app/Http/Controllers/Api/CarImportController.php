@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\CarImportRequest;
 use App\Http\Resources\CarImportResource;
 use App\Services\CarXmlImportService;
+use App\Services\VenduXmlImportService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\ValidationException;
 
@@ -45,6 +46,22 @@ class CarImportController extends Controller
                 'errors' => $e->errors(),
             ], 422);
         } catch (\InvalidArgumentException $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+            ], 422);
+        }
+    }
+
+    public function storeVendu(VenduXmlImportService $importService): JsonResponse
+    {
+        try {
+            $stats = $importService->import();
+
+            return response()->json([
+                'message' => 'Vendu import completed successfully.',
+                'data' => $stats,
+            ]);
+        } catch (\Throwable $e) {
             return response()->json([
                 'message' => $e->getMessage(),
             ], 422);

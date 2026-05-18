@@ -3,6 +3,7 @@
 namespace Tests\Feature\Api;
 
 use App\Models\Car;
+use App\Models\CarHistory;
 use App\Models\CarImport;
 use App\Models\CarOption;
 use App\Models\CarPhoto;
@@ -74,13 +75,16 @@ class CarImportTest extends TestCase
             ->assertJsonPath('data.sold_count', 0);
 
         $this->assertDatabaseCount('cars', 2);
-        $this->assertDatabaseHas('cars', ['id_produit' => 'IMPORT001']);
-        $this->assertDatabaseHas('cars', ['id_produit' => 'IMPORT002']);
+        $this->assertDatabaseHas('cars', ['id' => 100001, 'id_produit' => 'IMPORT001']);
+        $this->assertDatabaseHas('cars', ['id' => 100002, 'id_produit' => 'IMPORT002']);
+        $this->assertDatabaseCount('car_history', 2);
+        $this->assertDatabaseHas('car_history', ['car_id' => 100001, 'status' => 'IMPORTED']);
     }
 
     public function test_import_updates_existing_cars(): void
     {
         Car::factory()->create([
+            'id' => 100001,
             'id_produit' => 'IMPORT001',
             'make' => 'OLD_MAKE',
             'professional_price' => 10000,
@@ -102,40 +106,19 @@ class CarImportTest extends TestCase
         ]);
     }
 
-    public function test_import_marks_missing_cars_as_sold(): void
+    public function test_import_does_not_mark_missing_cars_as_sold(): void
     {
         Car::factory()->create([
+            'id' => 200001,
             'id_produit' => 'EXISTING001',
             'sync_status' => 'active',
+            'stock_status' => 'AVAILABLE',
         ]);
         Car::factory()->create([
+            'id' => 200002,
             'id_produit' => 'EXISTING002',
             'sync_status' => 'active',
-        ]);
-
-        $file = UploadedFile::fake()->createWithContent('cars.xml', $this->buildValidXml(1));
-
-        $response = $this->actingAs($this->user)
-            ->postJson(route('api.cars.import'), ['file' => $file]);
-
-        $response->assertOk()
-            ->assertJsonPath('data.sold_count', 2);
-
-        $this->assertDatabaseHas('cars', [
-            'id_produit' => 'EXISTING001',
-            'sync_status' => 'sold',
-        ]);
-        $this->assertDatabaseHas('cars', [
-            'id_produit' => 'EXISTING002',
-            'sync_status' => 'sold',
-        ]);
-    }
-
-    public function test_import_does_not_remark_already_sold_cars(): void
-    {
-        Car::factory()->create([
-            'id_produit' => 'ALREADY_SOLD',
-            'sync_status' => 'sold',
+            'stock_status' => 'AVAILABLE',
         ]);
 
         $file = UploadedFile::fake()->createWithContent('cars.xml', $this->buildValidXml(1));
@@ -145,6 +128,17 @@ class CarImportTest extends TestCase
 
         $response->assertOk()
             ->assertJsonPath('data.sold_count', 0);
+
+        $this->assertDatabaseHas('cars', [
+            'id_produit' => 'EXISTING001',
+            'sync_status' => 'active',
+            'stock_status' => 'AVAILABLE',
+        ]);
+        $this->assertDatabaseHas('cars', [
+            'id_produit' => 'EXISTING002',
+            'sync_status' => 'active',
+            'stock_status' => 'AVAILABLE',
+        ]);
     }
 
     public function test_import_syncs_photos(): void
@@ -182,7 +176,7 @@ class CarImportTest extends TestCase
 
     public function test_import_replaces_photos_on_update(): void
     {
-        $car = Car::factory()->create(['id_produit' => 'IMPORT001', 'sync_status' => 'active']);
+        $car = Car::factory()->create(['id' => 100001, 'id_produit' => 'IMPORT001', 'sync_status' => 'active']);
         CarPhoto::factory()->count(5)->create(['car_id' => $car->id]);
 
         $file = UploadedFile::fake()->createWithContent('cars.xml', $this->buildValidXml(1));
@@ -344,11 +338,13 @@ XML;
         $this->assertEquals(['Belgium', 'Luxembourg'], $car->excluded_countries);
     }
 
-    public function test_import_preserves_sold_status_for_previously_sold_car(): void
+    public function test_import_reactivates_previously_sold_car_when_present_in_feed(): void
     {
         Car::factory()->create([
+            'id' => 100001,
             'id_produit' => 'IMPORT001',
             'sync_status' => 'sold',
+            'stock_status' => 'SOLD',
             'make' => 'OLD',
         ]);
 
@@ -360,9 +356,36 @@ XML;
         $response->assertOk();
 
         $this->assertDatabaseHas('cars', [
+            'id' => 100001,
             'id_produit' => 'IMPORT001',
-            'sync_status' => 'sold',
-            'make' => 'OLD',
+            'sync_status' => 'active',
+            'stock_status' => 'AVAILABLE',
+            'make' => 'CITROEN',
+        ]);
+        $this->assertDatabaseHas('car_history', [
+            'car_id' => 100001,
+            'status' => 'AVAILABLE',
+        ]);
+    }
+
+    public function test_import_updates_id_produit_when_reference_changes(): void
+    {
+        Car::factory()->create([
+            'id' => 100001,
+            'id_produit' => 'OLDREF001',
+            'sync_status' => 'active',
+        ]);
+
+        $xml = str_replace('<id_produit>IMPORT001</id_produit>', '<id_produit>N196318</id_produit>', $this->buildValidXml(1));
+        $file = UploadedFile::fake()->createWithContent('cars.xml', $xml);
+
+        $this->actingAs($this->user)
+            ->postJson(route('api.cars.import'), ['file' => $file])
+            ->assertOk();
+
+        $this->assertDatabaseHas('cars', [
+            'id' => 100001,
+            'id_produit' => 'N196318',
         ]);
     }
 
@@ -371,7 +394,7 @@ XML;
         $items = '';
         for ($i = 1; $i <= $itemCount; $i++) {
             $id = str_pad((string) $i, 3, '0', STR_PAD_LEFT);
-            $items .= $this->buildXmlItem("IMPORT{$id}", $i);
+            $items .= $this->buildXmlItem("IMPORT{$id}", $i, 100000 + $i);
         }
 
         return <<<XML
@@ -384,11 +407,12 @@ XML;
 XML;
     }
 
-    private function buildXmlItem(string $idProduit, int $count): string
+    private function buildXmlItem(string $idProduit, int $count, int $xmlId): string
     {
         return <<<XML
 <item>
 <count>{$count}</count>
+<id>{$xmlId}</id>
 <id_produit>{$idProduit}</id_produit>
 <vin>VIN{$idProduit}12345678</vin>
 <marque><![CDATA[CITROEN]]></marque>

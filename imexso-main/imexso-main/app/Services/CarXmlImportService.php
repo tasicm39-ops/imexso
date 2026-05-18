@@ -2,12 +2,15 @@
 
 namespace App\Services;
 
+use App\Enums\CarHistoryStatus;
+use App\Enums\CarStockStatus;
 use App\Models\Car;
 use App\Models\CarImport;
 use App\Models\CarOption;
 use App\Models\CarPhoto;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use SimpleXMLElement;
@@ -28,6 +31,10 @@ class CarXmlImportService
         2 => 'en',
         3 => 'nl',
     ];
+
+    public function __construct(
+        private readonly CarHistoryService $carHistoryService,
+    ) {}
 
     /**
      * @param  array{content: string, filename: string, user_id: int|null}  $params
@@ -119,26 +126,42 @@ class CarXmlImportService
     public function validateItems(array $items): void
     {
         $errors = [];
-        $seenIds = [];
+        $seenXmlIds = [];
+        $seenIdProduits = [];
 
         foreach ($items as $index => $item) {
+            $xmlId = $this->extractInt($item, 'id');
             $idProduit = $this->extractString($item, 'id_produit');
-            $itemLabel = $idProduit ?: "item[{$index}]";
+            $itemLabel = $xmlId > 0 ? (string) $xmlId : ($idProduit ?: "item[{$index}]");
 
-            if ($idProduit === null || $idProduit === '') {
+            if ($xmlId <= 0) {
+                $errors[$itemLabel][] = 'id is required and must be a positive integer.';
+
+                continue;
+            }
+
+            if ($idProduit === '') {
                 $errors[$itemLabel][] = 'id_produit is required.';
 
                 continue;
             }
 
-            if (isset($seenIds[$idProduit])) {
+            if (isset($seenXmlIds[$xmlId])) {
+                $errors[$itemLabel][] = "Duplicate id: {$xmlId}.";
+
+                continue;
+            }
+            $seenXmlIds[$xmlId] = true;
+
+            if (isset($seenIdProduits[$idProduit])) {
                 $errors[$itemLabel][] = "Duplicate id_produit: {$idProduit}.";
 
                 continue;
             }
-            $seenIds[$idProduit] = true;
+            $seenIdProduits[$idProduit] = true;
 
             $itemData = [
+                'id' => $xmlId,
                 'id_produit' => $idProduit,
                 'make' => $this->extractString($item, 'marque'),
                 'model' => $this->extractString($item, 'modele'),
@@ -160,6 +183,7 @@ class CarXmlImportService
             ];
 
             $validator = Validator::make($itemData, [
+                'id' => ['required', 'integer', 'min:1'],
                 'id_produit' => ['required', 'string', 'max:50'],
                 'make' => ['required', 'string', 'max:255'],
                 'model' => ['required', 'string', 'max:255'],
@@ -196,76 +220,64 @@ class CarXmlImportService
     public function syncCars(array $items, CarImport $import): void
     {
         DB::transaction(function () use ($items, $import) {
-            $existingActiveIds = Car::query()
-                ->where('sync_status', 'active')
-                ->pluck('id_produit')
-                ->toArray();
-
-            $existingAllIds = Car::query()
-                ->pluck('id_produit', 'id')
-                ->flip()
-                ->toArray();
-
-            $xmlIds = [];
             $newCount = 0;
             $updatedCount = 0;
             $unchangedCount = 0;
 
             foreach ($items as $item) {
-                $idProduit = $this->extractString($item, 'id_produit');
-                $xmlIds[] = $idProduit;
-
+                $xmlId = $this->extractInt($item, 'id');
                 $attributes = $this->mapXmlItemToCarAttributes($item);
 
-                $existingCar = isset($existingAllIds[$idProduit])
-                    ? Car::query()->where('id_produit', $idProduit)->first()
-                    : null;
+                $car = Car::query()->find($xmlId);
 
-                if ($existingCar === null) {
-                    $car = Car::query()->create($attributes);
+                if ($car === null) {
+                    $car = Car::query()
+                        ->where('id_produit', $attributes['id_produit'])
+                        ->first();
+                }
+
+                if ($car === null) {
+                    $car = Car::query()->create(array_merge($attributes, ['id' => $xmlId]));
+                    $this->carHistoryService->record($car, CarHistoryStatus::Imported->value);
                     $newCount++;
-                } elseif ($existingCar->sync_status === 'sold') {
-                    $existingCar->update(['last_synced_at' => now()]);
-                    $unchangedCount++;
-                    $car = $existingCar;
                 } else {
-                    $hasChanges = $this->carHasChanges($existingCar, $attributes);
+                    $previousStockStatus = $car->stock_status;
+                    $hasChanges = $this->carHasChanges($car, $attributes);
 
                     if ($hasChanges) {
-                        $existingCar->update($attributes);
+                        $car->update($attributes);
                         $updatedCount++;
                     } else {
-                        $existingCar->update([
+                        $patch = [
+                            'stock_status' => CarStockStatus::Available->value,
                             'sync_status' => 'active',
                             'last_synced_at' => now(),
-                        ]);
-                        $unchangedCount++;
+                        ];
+
+                        if ($attributes['manufacturing_year'] !== null
+                            && $car->manufacturing_year !== $attributes['manufacturing_year']) {
+                            $patch['manufacturing_year'] = $attributes['manufacturing_year'];
+                            $updatedCount++;
+                        } else {
+                            $unchangedCount++;
+                        }
+
+                        $car->update($patch);
                     }
 
-                    $car = $existingCar;
+                    if ($previousStockStatus !== CarStockStatus::Available->value) {
+                        $this->carHistoryService->record($car, CarHistoryStatus::Available->value);
+                    }
                 }
 
                 $this->syncPhotos($car, $item);
                 $this->syncOptions($car, $item);
             }
 
-            $soldIds = array_diff($existingActiveIds, $xmlIds);
-            $soldCount = 0;
-
-            if (! empty($soldIds)) {
-                $soldCount = Car::query()
-                    ->whereIn('id_produit', $soldIds)
-                    ->where('sync_status', 'active')
-                    ->update([
-                        'sync_status' => 'sold',
-                        'last_synced_at' => now(),
-                    ]);
-            }
-
             $import->update([
                 'new_count' => $newCount,
                 'updated_count' => $updatedCount,
-                'sold_count' => $soldCount,
+                'sold_count' => 0,
                 'unchanged_count' => $unchangedCount,
             ]);
         });
@@ -287,7 +299,7 @@ class CarXmlImportService
             'horsepower' => $this->extractInt($item, 'puissance'),
             'engine_code' => $this->extractString($item, 'moteur'),
             'weight' => $this->extractNullableInt($item, 'poids'),
-            'manufacturing_year' => $this->extractNullableInt($item, 'annee_fabrication'),
+            'manufacturing_year' => $this->resolveManufacturingYear($item),
             'gearbox' => $this->extractString($item, 'boite'),
             'gearbox_code' => $this->extractString($item, 'code_boite'),
             'color' => $this->extractString($item, 'couleur'),
@@ -336,6 +348,7 @@ class CarXmlImportService
             'excluded_countries' => $this->parseExcludedCountries($item),
             'supplementary_equipment' => $this->parseEquipment($item, 'equipments_supplementaires', 'equipments_supplementaires_'),
             'standard_equipment' => $this->parseEquipment($item, 'equipments_serie', 'equipments_serie_'),
+            'stock_status' => CarStockStatus::Available->value,
             'sync_status' => 'active',
             'last_synced_at' => now(),
         ];
@@ -472,7 +485,7 @@ class CarXmlImportService
     private function carHasChanges(Car $car, array $newAttributes): bool
     {
         $fieldsToCompare = [
-            'vin', 'make', 'model', 'trim_level', 'fuel_type',
+            'id_produit', 'vin', 'make', 'model', 'trim_level', 'fuel_type',
             'engine_displacement', 'horsepower', 'engine_code', 'weight',
             'manufacturing_year', 'gearbox', 'gearbox_code', 'color',
             'color_code', 'mileage', 'co2', 'co2_wltp', 'wltp_electric_range',
@@ -677,6 +690,62 @@ class CarXmlImportService
         return $value !== '' && is_numeric($value) ? (float) $value : null;
     }
 
+    public function resolveManufacturingYear(SimpleXMLElement $item): ?int
+    {
+        $year = $this->extractNullableInt($item, 'annee_fabrication');
+
+        if ($year !== null && $year > 0) {
+            return $year;
+        }
+
+        $registrationDate = $this->extractNullableDate($item, 'date_immat');
+        if ($registrationDate !== null) {
+            $fromRegistration = (int) substr($registrationDate, 0, 4);
+
+            return $fromRegistration > 0 ? $fromRegistration : null;
+        }
+
+        $creationDate = trim($this->extractString($item, 'date_crea'));
+        if ($creationDate !== '') {
+            try {
+                $fromCreation = (int) Carbon::parse($creationDate)->format('Y');
+
+                return $fromCreation > 0 ? $fromCreation : null;
+            } catch (\Exception) {
+                return null;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Fill manufacturing_year from registration_date when XML had no annee_fabrication.
+     */
+    public function backfillManufacturingYearsFromRegistrationDates(): int
+    {
+        $updated = 0;
+
+        Car::query()
+            ->whereNull('manufacturing_year')
+            ->whereNotNull('registration_date')
+            ->orderBy('id')
+            ->chunkById(200, function ($cars) use (&$updated): void {
+                foreach ($cars as $car) {
+                    $year = (int) $car->registration_date?->format('Y');
+
+                    if ($year <= 0) {
+                        continue;
+                    }
+
+                    $car->update(['manufacturing_year' => $year]);
+                    $updated++;
+                }
+            });
+
+        return $updated;
+    }
+
     private function extractNullableDate(SimpleXMLElement $item, string $field): ?string
     {
         $value = trim((string) ($item->{$field} ?? ''));
@@ -690,5 +759,251 @@ class CarXmlImportService
         } catch (\Exception) {
             return null;
         }
+    }
+
+    public function fetchStockXml(): string
+    {
+        $url = config('imexso.cars_xml_url');
+        $response = Http::timeout(120)->get($url);
+
+        if (! $response->successful()) {
+            throw new \RuntimeException(
+                "Failed to fetch cars XML from {$url}: HTTP {$response->status()}",
+            );
+        }
+
+        $body = $response->body();
+
+        if ($body === '') {
+            throw new \RuntimeException("Cars XML response from {$url} was empty.");
+        }
+
+        return $body;
+    }
+
+    /**
+     * Create a sold archive car from vendu.xml when it is not in the stock feed yet.
+     */
+    public function createCarFromVenduItem(SimpleXMLElement $item): ?Car
+    {
+        $xmlId = $this->extractInt($item, 'id');
+        $idProduit = $this->extractString($item, 'id_produit');
+
+        if ($xmlId <= 0 && $idProduit !== '') {
+            $xmlId = $this->inferXmlIdFromIdProduit($idProduit) ?? 0;
+        }
+
+        if ($xmlId <= 0) {
+            return null;
+        }
+
+        $existing = Car::query()->find($xmlId);
+        if ($existing !== null) {
+            return $existing;
+        }
+
+        if ($idProduit !== '') {
+            $byReference = Car::query()->where('id_produit', $idProduit)->first();
+            if ($byReference !== null) {
+                return $byReference;
+            }
+        }
+
+        $attributes = $this->mapVenduItemToCarAttributes($item);
+        $car = Car::query()->create(array_merge($attributes, ['id' => $xmlId]));
+
+        $this->carHistoryService->record($car, CarHistoryStatus::Imported->value, [
+            'source' => 'vendu_archive',
+        ]);
+
+        $this->attachArchivePhotoIfAvailable($car);
+
+        return $car;
+    }
+
+    /**
+     * @return array{enriched: int, photos_attached: int, skipped: int}
+     */
+    public function enrichVenduArchiveCars(?string $stockXmlContent = null): array
+    {
+        $stats = ['enriched' => 0, 'photos_attached' => 0, 'skipped' => 0];
+
+        $stockItemsById = [];
+        if ($stockXmlContent !== null && $stockXmlContent !== '') {
+            $stockXml = $this->parseXml($stockXmlContent);
+            foreach ($this->extractItems($stockXml) as $item) {
+                $xmlId = $this->extractInt($item, 'id');
+                if ($xmlId > 0) {
+                    $stockItemsById[$xmlId] = $item;
+                }
+            }
+        }
+
+        $archives = Car::query()
+            ->where(function ($query) {
+                $query->where('make', 'UNKNOWN')
+                    ->orWhere('tags', 'vendu-archive');
+            })
+            ->get();
+
+        foreach ($archives as $car) {
+            if (isset($stockItemsById[$car->id])) {
+                $item = $stockItemsById[$car->id];
+                $attributes = $this->mapXmlItemToCarAttributes($item);
+                $attributes['stock_status'] = CarStockStatus::Sold->value;
+                $attributes['sync_status'] = 'sold';
+                $car->update($attributes);
+                $this->syncPhotos($car, $item);
+                $stats['enriched']++;
+
+                continue;
+            }
+
+            if ($this->attachArchivePhotoIfAvailable($car)) {
+                $stats['photos_attached']++;
+            } else {
+                $stats['skipped']++;
+            }
+        }
+
+        return $stats;
+    }
+
+    public function attachArchivePhotoIfAvailable(Car $car): bool
+    {
+        if ($car->photos()->exists()) {
+            return false;
+        }
+
+        $idProduit = $car->id_produit;
+        if ($idProduit === '' || $idProduit === 'UNKNOWN') {
+            return false;
+        }
+
+        $template = config('imexso.archive_photo_url_template');
+        $url = str_replace('{id_produit}', $idProduit, $template);
+
+        if (! $this->remoteImageExists($url)) {
+            return false;
+        }
+
+        CarPhoto::query()->create([
+            'car_id' => $car->id,
+            'url' => $url,
+            'position' => 0,
+        ]);
+
+        return true;
+    }
+
+    private function remoteImageExists(string $url): bool
+    {
+        try {
+            $response = Http::timeout(8)->head($url);
+
+            return $response->successful();
+        } catch (\Throwable) {
+            return false;
+        }
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function mapVenduItemToCarAttributes(SimpleXMLElement $item): array
+    {
+        if (isset($item->marque) && trim((string) $item->marque) !== '') {
+            $attributes = $this->mapXmlItemToCarAttributes($item);
+            $attributes['stock_status'] = CarStockStatus::Sold->value;
+            $attributes['sync_status'] = 'sold';
+
+            return $attributes;
+        }
+
+        $idProduit = $this->extractString($item, 'id_produit', 'UNKNOWN');
+        $creationDate = $this->extractNullableDate($item, 'date_vente')
+            ?? $this->extractNullableDate($item, 'date_commande')
+            ?? now()->format('Y-m-d');
+
+        return [
+            'id_produit' => $idProduit,
+            'vin' => $this->extractNullableString($item, 'vin'),
+            'make' => $this->extractString($item, 'marque', 'UNKNOWN'),
+            'model' => $this->extractString($item, 'modele', '—'),
+            'trim_level' => $this->extractString($item, 'finition', '-'),
+            'fuel_type' => $this->extractString($item, 'carburant', 'UNKNOWN'),
+            'engine_displacement' => $this->extractInt($item, 'cylindre'),
+            'horsepower' => $this->extractInt($item, 'puissance'),
+            'engine_code' => $this->extractString($item, 'moteur', '-'),
+            'weight' => $this->extractNullableInt($item, 'poids'),
+            'manufacturing_year' => $this->resolveManufacturingYear($item),
+            'gearbox' => $this->extractString($item, 'boite', '-'),
+            'gearbox_code' => $this->extractString($item, 'code_boite', '0'),
+            'color' => $this->extractString($item, 'couleur', '-'),
+            'color_code' => $this->extractNullableString($item, 'code_couleur'),
+            'mileage' => $this->extractInt($item, 'km'),
+            'co2' => $this->extractNullableInt($item, 'co2'),
+            'co2_wltp' => $this->extractNullableInt($item, 'co2wltp'),
+            'wltp_electric_range' => $this->extractNullableInt($item, 'wltp_erange'),
+            'euro_standard' => $this->extractNullableString($item, 'norme_euro'),
+            'professional_price' => $this->extractFloat($item, 'prix_pro'),
+            'vat_type' => $this->extractString($item, 'tva', 'HTVA'),
+            'status' => [
+                'fr' => 'Vendu',
+                'de' => 'Verkauft',
+                'en' => 'Sold',
+                'nl' => 'Verkocht',
+            ],
+            'registration_date' => $this->extractNullableDate($item, 'date_immat'),
+            'retention_date' => null,
+            'warranty_start_date' => null,
+            'doors' => $this->extractNullableInt($item, 'portes'),
+            'category' => $this->extractNullableString($item, 'categorie'),
+            'catalogue_base_price_excl_vat' => null,
+            'catalogue_total_price_excl_vat' => null,
+            'catalogue_price_incl_vat' => null,
+            'used_car_fees' => 0.0,
+            'used_car_fees_detail' => null,
+            'condition_type' => $this->extractString($item, 'vn_vo', 'VO'),
+            'france_discount' => 0.0,
+            'catalogue_model_name' => null,
+            'is_clearance' => false,
+            'argus_price' => null,
+            'previous_price' => null,
+            'user_type' => $this->extractString($item, 'user_type', 'BE'),
+            'is_new' => false,
+            'catalogue_remark' => null,
+            'creation_date' => $creationDate,
+            'private_price_incl_vat' => 0.0,
+            'publication_codes' => '',
+            'tags' => 'vendu-archive',
+            'main_equipment_codes' => [],
+            'carlab' => false,
+            'carpass_url' => null,
+            'ecological_penalty' => null,
+            'vehicle_condition' => null,
+            'auction_data' => null,
+            'stock_level' => null,
+            'okcars' => false,
+            'ecarlux' => false,
+            'publish_platforms' => [],
+            'excluded_countries' => [],
+            'supplementary_equipment' => null,
+            'standard_equipment' => null,
+            'stock_status' => CarStockStatus::Sold->value,
+            'sync_status' => 'sold',
+            'last_synced_at' => now(),
+        ];
+    }
+
+    public function inferXmlIdFromIdProduit(string $idProduit): ?int
+    {
+        if (preg_match('/(\d+)\s*$/', $idProduit, $matches) !== 1) {
+            return null;
+        }
+
+        $id = (int) $matches[1];
+
+        return $id > 0 ? $id : null;
     }
 }

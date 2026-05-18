@@ -1,5 +1,6 @@
 import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
+import { AdminFilterSelect } from '@/components/admin-filter-select';
 import AppLayout from '@/layouts/app-layout';
 import admin from '@/routes/admin';
 import type { BreadcrumbItem } from '@/types';
@@ -276,55 +277,46 @@ export default function EventsIndex({ events, filters, eventTypes, payloadMakes,
                         </div>
                         <div>
                             <label className="mb-1 block text-xs font-medium text-muted-foreground">Event Type</label>
-                            <select
+                            <AdminFilterSelect
                                 value={filters.event_type || ''}
-                                onChange={(e) => handleFilter('event_type', e.target.value)}
-                                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
-                            >
-                                <option value="">All Types</option>
-                                {eventTypes.map((type) => (
-                                    <option key={type} value={type}>{EVENT_TYPE_STYLES[type]?.label ?? type}</option>
-                                ))}
-                            </select>
+                                onValueChange={(value) => handleFilter('event_type', value)}
+                                placeholder="All Types"
+                                options={eventTypes.map((type) => ({
+                                    value: type,
+                                    label: EVENT_TYPE_STYLES[type]?.label ?? type,
+                                }))}
+                                triggerClassName="w-full"
+                            />
                         </div>
                         <div>
                             <label className="mb-1 block text-xs font-medium text-muted-foreground">Make</label>
-                            <select
+                            <AdminFilterSelect
                                 value={filters.payload_make || ''}
-                                onChange={(e) => handleFilter('payload_make', e.target.value)}
-                                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
-                            >
-                                <option value="">All Makes</option>
-                                {payloadMakes.map((make) => (
-                                    <option key={make} value={make}>{make}</option>
-                                ))}
-                            </select>
+                                onValueChange={(value) => handleFilter('payload_make', value)}
+                                placeholder="All Makes"
+                                options={payloadMakes.map((make) => ({ value: make, label: make }))}
+                                triggerClassName="w-full"
+                            />
                         </div>
                         <div>
                             <label className="mb-1 block text-xs font-medium text-muted-foreground">Model</label>
-                            <select
+                            <AdminFilterSelect
                                 value={filters.payload_model || ''}
-                                onChange={(e) => handleFilter('payload_model', e.target.value)}
-                                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
-                            >
-                                <option value="">All Models</option>
-                                {payloadModels.map((model) => (
-                                    <option key={model} value={model}>{model}</option>
-                                ))}
-                            </select>
+                                onValueChange={(value) => handleFilter('payload_model', value)}
+                                placeholder="All Models"
+                                options={payloadModels.map((model) => ({ value: model, label: model }))}
+                                triggerClassName="w-full"
+                            />
                         </div>
                         <div>
                             <label className="mb-1 block text-xs font-medium text-muted-foreground">Country</label>
-                            <select
+                            <AdminFilterSelect
                                 value={filters.country || ''}
-                                onChange={(e) => handleFilter('country', e.target.value)}
-                                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
-                            >
-                                <option value="">All Countries</option>
-                                {countries.map((c) => (
-                                    <option key={c} value={c}>{c}</option>
-                                ))}
-                            </select>
+                                onValueChange={(value) => handleFilter('country', value)}
+                                placeholder="All Countries"
+                                options={countries.map((c) => ({ value: c, label: c }))}
+                                triggerClassName="w-full"
+                            />
                         </div>
                         <div>
                             <label className="mb-1 block text-xs font-medium text-muted-foreground">From</label>
@@ -346,15 +338,18 @@ export default function EventsIndex({ events, filters, eventTypes, payloadMakes,
                         </div>
                         <div>
                             <label className="mb-1 block text-xs font-medium text-muted-foreground">Per Page</label>
-                            <select
+                            <AdminFilterSelect
+                                allowAll={false}
                                 value={filters.per_page || '20'}
-                                onChange={(e) => handleFilter('per_page', e.target.value)}
-                                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
-                            >
-                                <option value="20">20</option>
-                                <option value="50">50</option>
-                                <option value="100">100</option>
-                            </select>
+                                onValueChange={(value) => handleFilter('per_page', value)}
+                                placeholder="20"
+                                options={[
+                                    { value: '20', label: '20' },
+                                    { value: '50', label: '50' },
+                                    { value: '100', label: '100' },
+                                ]}
+                                triggerClassName="w-full"
+                            />
                         </div>
                     </div>
                 </div>

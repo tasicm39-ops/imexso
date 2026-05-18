@@ -67,6 +67,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::middleware('admin')->group(function () {
         Route::post('cars/import', [CarImportController::class, 'store'])->name('api.cars.import');
+        Route::post('cars/import-vendu', [CarImportController::class, 'storeVendu'])->name('api.cars.import-vendu');
 
         Route::get('segment-events', [SegmentEventController::class, 'index'])->name('api.segment-events.index');
 

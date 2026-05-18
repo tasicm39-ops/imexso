@@ -5,11 +5,14 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\CarImportRequest;
 use App\Http\Requests\Admin\CarMarketingRequest;
+use App\Http\Resources\CarHistoryResource;
 use App\Models\Car;
+use App\Models\CarHistory;
 use App\Models\CarMarketing;
 use App\Models\Offer;
 use App\Models\SegmentEvent;
 use App\Services\CarXmlImportService;
+use App\Services\VenduXmlImportService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -21,10 +24,12 @@ class CarController extends Controller
 {
     public function index(Request $request): Response
     {
+        $syncStatus = $request->input('sync_status', 'active');
+
         $query = Car::query()->with(['photos', 'marketing']);
 
-        if ($request->filled('sync_status')) {
-            $query->where('sync_status', $request->input('sync_status'));
+        if ($syncStatus !== 'all') {
+            $query->where('sync_status', $syncStatus);
         }
 
         if ($request->filled('make')) {
@@ -42,22 +47,42 @@ class CarController extends Controller
             });
         }
 
-        $makes = Car::query()
+        $makesQuery = Car::query()
             ->whereNotNull('make')
+            ->where('make', '!=', 'UNKNOWN');
+
+        if ($syncStatus !== 'all') {
+            $makesQuery->where('sync_status', $syncStatus);
+        }
+
+        $makes = $makesQuery
             ->distinct()
             ->pluck('make')
             ->sort()
             ->values();
 
-        $cars = $query->orderByDesc('created_at')->paginate(20)->withQueryString();
+        $cars = $query
+            ->orderByRaw("CASE WHEN sync_status = 'active' THEN 0 ELSE 1 END")
+            ->orderByDesc('updated_at')
+            ->paginate(20)
+            ->withQueryString();
 
         $carIds = $cars->getCollection()->pluck('id')->all();
         $statsData = $this->buildCarStats($carIds);
 
         return Inertia::render('admin/cars/index', [
             'cars' => $cars,
-            'filters' => $request->only(['sync_status', 'make', 'search']),
+            'filters' => [
+                'sync_status' => $syncStatus,
+                'make' => $request->input('make'),
+                'search' => $request->input('search'),
+            ],
             'makes' => $makes,
+            'counts' => [
+                'active' => Car::query()->where('sync_status', 'active')->count(),
+                'sold' => Car::query()->where('sync_status', 'sold')->count(),
+                'total' => Car::query()->count(),
+            ],
             'offerStats' => $statsData['offers'],
             'viewStats' => $statsData['views'],
         ]);
@@ -101,12 +126,45 @@ class CarController extends Controller
         }
     }
 
+    public function storeVendu(VenduXmlImportService $importService): RedirectResponse
+    {
+        try {
+            $stats = $importService->import();
+
+            return redirect()
+                ->route('admin.cars.index')
+                ->with('success', sprintf(
+                    'Vendu import completed: %d processed, %d cars updated, %d archive cars created, %d history created, %d history updated, %d skipped, %d missing.',
+                    $stats['processed'],
+                    $stats['updated'],
+                    $stats['cars_created'],
+                    $stats['history_created'],
+                    $stats['history_updated'],
+                    $stats['skipped'],
+                    $stats['missing_cars'],
+                ));
+        } catch (\Throwable $e) {
+            return back()->with('error', $e->getMessage());
+        }
+    }
+
     public function marketing(Car $car): Response
     {
         $car->load('marketing');
 
+        $history = CarHistory::query()
+            ->where('car_id', $car->id)
+            ->orderByDesc('created_at')
+            ->get();
+
         return Inertia::render('admin/cars/marketing', [
             'car' => $car,
+            'history' => [
+                'data' => $history
+                    ->map(fn (CarHistory $entry) => (new CarHistoryResource($entry))->resolve())
+                    ->values()
+                    ->all(),
+            ],
             'marketing' => $car->marketing ?? new CarMarketing([
                 'limited_stock_enabled' => false,
                 'limited_stock_count' => null,

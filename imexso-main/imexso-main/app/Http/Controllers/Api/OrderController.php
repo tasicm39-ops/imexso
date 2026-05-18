@@ -8,12 +8,17 @@ use App\Models\Car;
 use App\Models\CarCartItem;
 use App\Models\Order;
 use App\Models\User;
+use App\Services\CarHistoryService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class OrderController extends Controller
 {
+    public function __construct(
+        private readonly CarHistoryService $carHistoryService,
+    ) {}
+
     public function store(OrderStoreRequest $request): JsonResponse
     {
         /** @var User $user */
@@ -58,7 +63,8 @@ class OrderController extends Controller
                     'confirmed_at' => now(),
                 ]);
 
-                $car->update(['sync_status' => 'sold']);
+                $car->markSold();
+                $this->carHistoryService->recordSoldFromOnlineOrder($car, $user, $notes);
 
                 CarCartItem::query()
                     ->where('car_id', $car->id)

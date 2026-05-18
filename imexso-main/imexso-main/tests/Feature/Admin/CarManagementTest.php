@@ -171,7 +171,7 @@ class CarManagementTest extends TestCase
         $items = '';
         for ($i = 1; $i <= $itemCount; $i++) {
             $id = str_pad((string) $i, 3, '0', STR_PAD_LEFT);
-            $items .= $this->buildXmlItem("IMPORT{$id}", $i);
+            $items .= $this->buildXmlItem("IMPORT{$id}", $i, 100000 + $i);
         }
 
         return <<<XML
@@ -184,11 +184,12 @@ class CarManagementTest extends TestCase
 XML;
     }
 
-    private function buildXmlItem(string $idProduit, int $count): string
+    private function buildXmlItem(string $idProduit, int $count, int $xmlId): string
     {
         return <<<XML
 <item>
 <count>{$count}</count>
+<id>{$xmlId}</id>
 <id_produit>{$idProduit}</id_produit>
 <vin>VIN{$idProduit}12345678</vin>
 <marque><![CDATA[CITROEN]]></marque>

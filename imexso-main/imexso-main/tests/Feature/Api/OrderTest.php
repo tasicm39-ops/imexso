@@ -4,6 +4,7 @@ namespace Tests\Feature\Api;
 
 use App\Models\Car;
 use App\Models\CarCartItem;
+use App\Models\CarHistory;
 use App\Models\Order;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -70,7 +71,17 @@ class OrderTest extends TestCase
         $this->assertDatabaseHas('cars', [
             'id' => $car->id,
             'sync_status' => 'sold',
+            'stock_status' => 'SOLD',
         ]);
+
+        $this->assertDatabaseHas('car_history', [
+            'car_id' => $car->id,
+            'status' => 'SOLD',
+        ]);
+
+        $history = CarHistory::query()->where('car_id', $car->id)->first();
+        $this->assertSame('online_order', $history->buyer_info['source'] ?? null);
+        $this->assertSame('C1234', $history->buyer_info['client_id'] ?? null);
 
         $this->assertDatabaseMissing('car_cart_items', [
             'user_id' => $user->id,

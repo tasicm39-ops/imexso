@@ -22,7 +22,8 @@ class CarFactory extends Factory
         $euroStandards = ['EURO6', 'EURO5', 'EURO6.d'];
 
         return [
-            'id_produit' => strtoupper(fake()->unique()->bothify('?######')),
+            'id' => fake()->unique()->numberBetween(100_000, 999_999),
+            'id_produit' => strtoupper(fake()->bothify('?######')),
             'vin' => fake()->optional(0.8)->regexify('[A-Z0-9]{17}'),
             'make' => fake()->randomElement($makes),
             'model' => fake()->word(),
@@ -96,6 +97,7 @@ class CarFactory extends Factory
                 'en' => [fake()->sentence(3), fake()->sentence(3)],
             ],
             'sync_status' => 'active',
+            'stock_status' => 'AVAILABLE',
             'last_synced_at' => now(),
         ];
     }
@@ -104,6 +106,7 @@ class CarFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'sync_status' => 'sold',
+            'stock_status' => 'SOLD',
         ]);
     }
 

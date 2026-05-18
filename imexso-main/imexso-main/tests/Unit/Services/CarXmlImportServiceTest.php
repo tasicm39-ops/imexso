@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Services;
 
+use App\Services\CarHistoryService;
 use App\Services\CarXmlImportService;
 use PHPUnit\Framework\TestCase;
 
@@ -13,7 +14,7 @@ class CarXmlImportServiceTest extends TestCase
     {
         parent::setUp();
 
-        $this->service = new CarXmlImportService;
+        $this->service = new CarXmlImportService(new CarHistoryService);
     }
 
     public function test_parse_xml_with_valid_xml(): void
@@ -204,6 +205,18 @@ class CarXmlImportServiceTest extends TestCase
         $this->assertTrue($attributes['is_clearance']);
         $this->assertFalse($attributes['is_new']);
         $this->assertEquals('active', $attributes['sync_status']);
+        $this->assertEquals('AVAILABLE', $attributes['stock_status']);
+    }
+
+    public function test_resolve_manufacturing_year_from_registration_date_when_fabrication_empty(): void
+    {
+        $xml = $this->service->parseXml($this->buildMinimalXmlWithEmptyFields(
+            dateImmat: '2024-06-29',
+        ));
+        $items = $this->service->extractItems($xml);
+
+        $this->assertSame(2024, $this->service->resolveManufacturingYear($items[0]));
+        $this->assertSame(2024, $this->service->mapXmlItemToCarAttributes($items[0])['manufacturing_year']);
     }
 
     public function test_map_xml_item_handles_nullable_fields(): void
@@ -347,6 +360,7 @@ class CarXmlImportServiceTest extends TestCase
 <total_items>1</total_items>
 <item>
 <count>1</count>
+<id>196318</id>
 <id_produit>TEST001</id_produit>
 <vin>TESTVIN12345678901</vin>
 <marque><![CDATA[CITROEN]]></marque>
@@ -447,15 +461,19 @@ class CarXmlImportServiceTest extends TestCase
 XML;
     }
 
-    private function buildMinimalXmlWithEmptyFields(): string
+    private function buildMinimalXmlWithEmptyFields(?string $dateImmat = null, ?string $dateCrea = null): string
     {
-        return <<<'XML'
+        $dateImmat = $dateImmat ?? '';
+        $dateCrea = $dateCrea ?? '';
+
+        return <<<XML
 <?xml version="1.0" encoding="UTF-8"?>
 <data>
 <time>13/03/2026 14:12:51</time>
 <total_items>1</total_items>
 <item>
 <count>1</count>
+<id>196319</id>
 <id_produit>EMPTY001</id_produit>
 <vin></vin>
 <marque><![CDATA[PEUGEOT]]></marque>
@@ -483,7 +501,7 @@ XML;
 <prix_pro>15000</prix_pro>
 <tva>TTC</tva>
 <statut><![CDATA[En stock%%Auf Lager%%On Stock%%Stock]]></statut>
-<date_immat></date_immat>
+<date_immat>{$dateImmat}</date_immat>
 <retention></retention>
 <date_depart_garantie></date_depart_garantie>
 <portes></portes>
@@ -506,7 +524,7 @@ XML;
 <user_type>INT</user_type>
 <new></new>
 <remarque_catalogue></remarque_catalogue>
-<date_crea>2024-07-01</date_crea>
+<date_crea>{$dateCrea}</date_crea>
 <prix_part_tvac>0</prix_part_tvac>
 <codes_pub>N/A//N/A</codes_pub>
 <tags><![CDATA[EMPTY001 %% PEUGEOT %% 308]]></tags>

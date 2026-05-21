@@ -109,29 +109,28 @@ export default function HistoriqueContent() {
         </div>
       </section>
 
+      {/* SAKRIVENO (mockup: "Remove this from the History") — odkomentariši ceo blok ispod */}
+      {/*
       <section className="pb-5">
-        <CmsSectionHeader>
-          <T k="dic_histoire_IMEXSO_FETE_30_ANS" />
-        </CmsSectionHeader>
-        <div className="cms-section-body pb-4">
-          <div className="boxcar-container py-3">
-            <div className="row g-3">
+        <div className="boxcar-container mb-3">
+          <h2 className="cms-band-title cms-band-title--dark mb-0">
+            <T k="dic_histoire_IMEXSO_FETE_30_ANS" />
+          </h2>
+        </div>
+        <div className="boxcar-container pb-4">
+          <div className="cms-anniversary-box">
+            <div className="cms-anniversary-box__grid">
               {["30-5.jpg", "30-6.jpg", "30-1.jpg", "30-4.jpg", "30-3.jpg", "30-2.jpg"].map(
                 (name) => (
-                  <div key={name} className="col-md-4">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={cmsImage(name)}
-                      alt=""
-                      className="w-100 rounded-1"
-                    />
-                  </div>
+                  <img key={name} src={cmsImage(name)} alt="" />
                 ),
               )}
             </div>
+            <div className="cms-anniversary-box__footer" aria-hidden="true" />
           </div>
         </div>
       </section>
+      */}
     </CmsPageShell>
   );
 }

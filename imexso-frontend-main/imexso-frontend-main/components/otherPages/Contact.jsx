@@ -1,12 +1,58 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useLocale } from "@/context/LocaleContext";
+import { apiPost, getCsrfCookie } from "@/lib/api";
+
+const INITIAL_FORM = {
+    first_name: "",
+    last_name: "",
+    email: "",
+    phone: "",
+    message: "",
+};
 
 export default function Contact() {
     const { t } = useLocale();
+    const [form, setForm] = useState(INITIAL_FORM);
+    const [submitting, setSubmitting] = useState(false);
+    const [feedback, setFeedback] = useState(null);
+
+    function updateField(name, value) {
+        setForm((prev) => ({ ...prev, [name]: value }));
+    }
+
+    async function handleSubmit(e) {
+        e.preventDefault();
+        setSubmitting(true);
+        setFeedback(null);
+
+        try {
+            await getCsrfCookie();
+            const res = await apiPost("/api/contact", form);
+
+            if (res.ok) {
+                setForm(INITIAL_FORM);
+                setFeedback({ type: "success", text: t("contact.success") });
+            } else if (res.status === 422) {
+                const data = await res.json();
+                const firstError = Object.values(data.errors || {})[0]?.[0];
+                setFeedback({
+                    type: "error",
+                    text: firstError || t("contact.error"),
+                });
+            } else {
+                setFeedback({ type: "error", text: t("contact.error") });
+            }
+        } catch {
+            setFeedback({ type: "error", text: t("contact.error") });
+        } finally {
+            setSubmitting(false);
+        }
+    }
+
     return (
         <section className="contact-us-section layout-radius">
             <div className="boxcar-container">
@@ -42,14 +88,26 @@ export default function Contact() {
                                             {t("contact.contact_description")}
                                         </p>
                                     </div>
-                                    <form onSubmit={(e) => e.preventDefault()} className="row">
+                                    {feedback && (
+                                        <div
+                                            className={`contact-form-alert contact-form-alert--${feedback.type}`}
+                                            role="alert"
+                                        >
+                                            {feedback.text}
+                                        </div>
+                                    )}
+                                    <form onSubmit={handleSubmit} className="row">
                                         <div className="col-lg-6">
                                             <div className="form_boxes">
                                                 <label>{t("contact.first_name")}</label>
                                                 <input
                                                     type="text"
                                                     required
-                                                    name="name"
+                                                    name="first_name"
+                                                    value={form.first_name}
+                                                    onChange={(e) =>
+                                                        updateField("first_name", e.target.value)
+                                                    }
                                                     placeholder="John"
                                                 />
                                             </div>
@@ -60,7 +118,11 @@ export default function Contact() {
                                                 <input
                                                     required
                                                     type="text"
-                                                    name="last-name"
+                                                    name="last_name"
+                                                    value={form.last_name}
+                                                    onChange={(e) =>
+                                                        updateField("last_name", e.target.value)
+                                                    }
                                                     placeholder="Doe"
                                                 />
                                             </div>
@@ -72,6 +134,10 @@ export default function Contact() {
                                                     required
                                                     type="email"
                                                     name="email"
+                                                    value={form.email}
+                                                    onChange={(e) =>
+                                                        updateField("email", e.target.value)
+                                                    }
                                                     placeholder="john@example.com"
                                                 />
                                             </div>
@@ -83,6 +149,10 @@ export default function Contact() {
                                                     required
                                                     type="tel"
                                                     name="phone"
+                                                    value={form.phone}
+                                                    onChange={(e) =>
+                                                        updateField("phone", e.target.value)
+                                                    }
                                                     placeholder="+32 000 000 000"
                                                 />
                                             </div>
@@ -94,13 +164,22 @@ export default function Contact() {
                                                     name="message"
                                                     placeholder={t("contact.message_placeholder")}
                                                     required
-                                                    defaultValue=""
+                                                    value={form.message}
+                                                    onChange={(e) =>
+                                                        updateField("message", e.target.value)
+                                                    }
                                                 />
                                             </div>
                                         </div>
                                         <div className="form-submit">
-                                            <button type="submit" className="theme-btn">
-                                                {t("contact.send_message")}
+                                            <button
+                                                type="submit"
+                                                className="theme-btn"
+                                                disabled={submitting}
+                                            >
+                                                {submitting
+                                                    ? t("contact.sending")
+                                                    : t("contact.send_message")}
                                                 <Image
                                                     alt=""
                                                     width={14}

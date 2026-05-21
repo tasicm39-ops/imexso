@@ -60,6 +60,24 @@ class CarImportTest extends TestCase
             ->assertJsonValidationErrors('file');
     }
 
+    public function test_import_stores_retention_date_from_xml(): void
+    {
+        $xml = str_replace(
+            '<retention></retention>',
+            '<retention>2026-06-01</retention>',
+            $this->buildValidXml(1),
+        );
+        $file = UploadedFile::fake()->createWithContent('cars.xml', $xml);
+
+        $this->actingAs($this->user)
+            ->postJson(route('api.cars.import'), ['file' => $file])
+            ->assertOk();
+
+        $car = Car::query()->where('id_produit', 'IMPORT001')->first();
+        $this->assertNotNull($car);
+        $this->assertSame('2026-06-01', $car->retention_date?->format('Y-m-d'));
+    }
+
     public function test_import_creates_new_cars(): void
     {
         $file = UploadedFile::fake()->createWithContent('cars.xml', $this->buildValidXml(2));

@@ -6,6 +6,7 @@ use Database\Factories\SaleHistoryFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class SaleHistory extends Model
 {
@@ -58,5 +59,13 @@ class SaleHistory extends Model
     public function client(): BelongsTo
     {
         return $this->belongsTo(User::class, 'client_id', 'legacy_client_id');
+    }
+
+    /**
+     * @return HasOne<Car, $this>
+     */
+    public function carByReference(): HasOne
+    {
+        return $this->hasOne(Car::class, 'id_produit', 'id_produit');
     }
 }

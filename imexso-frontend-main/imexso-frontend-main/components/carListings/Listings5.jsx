@@ -1,6 +1,5 @@
 "use client";
 import React from "react";
-import Image from "next/image";
 import Link from "next/link";
 import Pagination from "../common/Pagination";
 import SelectComponent from "../common/SelectComponent";
@@ -8,6 +7,8 @@ import FilterForm from "./FilterForm";
 import FavouriteButton from "@/components/common/FavouriteButton";
 import AddToCartButton from "@/components/common/AddToCartButton";
 import { useLocale } from "@/context/LocaleContext";
+import CarPhoto from "@/components/common/CarPhoto";
+import { getCarImageUrl } from "@/lib/carDisplay";
 
 const SORT_LABELS = [
   "Newest",
@@ -37,13 +38,6 @@ function formatPrice(price) {
 function formatMileage(km) {
   if (!km && km !== 0) return "N/A";
   return Number(km).toLocaleString() + " km";
-}
-
-function getCarImage(car) {
-  if (car.photos && car.photos.length > 0) {
-    return car.photos[0].url;
-  }
-  return "/images/placeholder-car.png";
 }
 
 function getCarTitle(car) {
@@ -312,37 +306,6 @@ export default function Listings5({
   );
 }
 
-function ListingCarImage({ src, alt, variant = "list" }) {
-  const { t } = useLocale();
-  const [error, setError] = React.useState(false);
-  if (error || !src || src === "/images/placeholder-car.png") {
-    return (
-      <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "#e9ecef", color: "#999", fontSize: "14px" }}>
-        {t("general.no_preview")}
-      </div>
-    );
-  }
-
-  const isGrid = variant === "grid";
-
-  return (
-    <Image
-      alt={alt}
-      src={src}
-      width={isGrid ? 400 : 340}
-      height={isGrid ? 220 : 320}
-      style={{
-        objectFit: isGrid ? "contain" : "cover",
-        height: "100%",
-        width: "100%",
-        background: isGrid ? "#f5f5f5" : undefined,
-      }}
-      unoptimized
-      onError={() => setError(true)}
-    />
-  );
-}
-
 function CartPopularityIndicator({ count, t }) {
   if (!count || count <= 0) return null;
   const label = count === 1
@@ -407,7 +370,7 @@ function CarPrice({ car, className }) {
 
 function CarListItem({ car, isFavourited = false, cartCarIds = [], onCartChange }) {
   const { t } = useLocale();
-  const imageUrl = getCarImage(car);
+  const imageUrl = getCarImageUrl(car);
   const soldVisible = isSoldVisible(car);
 
   return (
@@ -417,7 +380,7 @@ function CarListItem({ car, isFavourited = false, cartCarIds = [], onCartChange 
         <div className="image-box">
           <figure className="image" style={{ height: "100%" }}>
             <Link href={`/car/${car.id_produit}`}>
-              <ListingCarImage src={imageUrl} alt={getCarTitle(car)} />
+              <CarPhoto src={imageUrl} alt={getCarTitle(car)} width={340} height={320} variant="list" />
             </Link>
           </figure>
         </div>
@@ -508,7 +471,7 @@ function CarListItem({ car, isFavourited = false, cartCarIds = [], onCartChange 
 
 function CarGridItem({ car, isFavourited = false, cartCarIds = [], onCartChange }) {
   const { t } = useLocale();
-  const imageUrl = getCarImage(car);
+  const imageUrl = getCarImageUrl(car);
   const soldVisible = isSoldVisible(car);
 
   return (
@@ -518,7 +481,7 @@ function CarGridItem({ car, isFavourited = false, cartCarIds = [], onCartChange 
         <div className="image-box" style={{ position: "relative" }}>
           <figure className="image">
             <Link href={`/car/${car.id_produit}`}>
-              <ListingCarImage src={imageUrl} alt={getCarTitle(car)} variant="grid" />
+              <CarPhoto src={imageUrl} alt={getCarTitle(car)} width={400} height={220} variant="grid" />
             </Link>
           </figure>
           <div style={{ position: "absolute", top: 8, right: 8, zIndex: 2 }}>

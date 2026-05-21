@@ -1,6 +1,8 @@
 <?php
 
 return [
+    'contact_inbox' => env('IMEXSO_CONTACT_INBOX', env('MAIL_FROM_ADDRESS', 'contact@imexso.com')),
+
     'cars_xml_url' => env('IMEXSO_CARS_XML_URL', 'https://www.imexso.com/data/cars.xml'),
     'vendu_xml_url' => env('IMEXSO_VENDU_XML_URL', 'https://www.imexso.com/data/vendu.xml'),
 

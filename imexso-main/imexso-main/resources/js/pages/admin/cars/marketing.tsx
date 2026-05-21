@@ -28,6 +28,24 @@ function formatHistoryDate(dateStr: string): string {
     });
 }
 
+function formatRetentionDate(dateStr: string | null): string | null {
+    if (!dateStr) {
+        return null;
+    }
+
+    const date = new Date(dateStr);
+
+    if (Number.isNaN(date.getTime())) {
+        return null;
+    }
+
+    return date.toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+    });
+}
+
 type CarPhoto = {
     id: number;
     url: string;
@@ -41,6 +59,7 @@ type Car = {
     model: string;
     trim_level: string;
     professional_price: string;
+    retention_date: string | null;
     stock_status?: string;
     sync_status?: string;
     photos: CarPhoto[];
@@ -126,6 +145,15 @@ export default function CarMarketing({ car, marketing, history }: Props) {
                         <p className="mt-1 font-mono text-xs text-muted-foreground">
                             XML id: {car.id} · Ref: {car.id_produit}
                             {car.stock_status && ` · ${car.stock_status}`}
+                        </p>
+                        <p className="mt-2 text-sm">
+                            <span className="text-muted-foreground">Retention: </span>
+                            <span
+                                className="font-semibold"
+                                style={{ color: '#e67e22' }}
+                            >
+                                {formatRetentionDate(car.retention_date) ?? '—'}
+                            </span>
                         </p>
                     </div>
                     <button

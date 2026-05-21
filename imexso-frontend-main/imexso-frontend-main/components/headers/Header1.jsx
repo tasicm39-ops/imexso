@@ -8,6 +8,7 @@ import { useCart } from "@/context/CartContext";
 import { useLocale } from "@/context/LocaleContext";
 import { useRouter } from "next/navigation";
 import { apiGet } from "@/lib/api";
+import { getCarImageUrl } from "@/lib/carDisplay";
 import LanguageSelector from "@/components/common/LanguageSelector";
 
 export default function Header1({
@@ -163,7 +164,7 @@ export default function Header1({
                   <ul className="box-car-search">
                     {searchResults.map((car) => {
                       const imageUrl =
-                        car.photos?.[0]?.url || "/images/placeholder-car.png";
+                        getCarImageUrl(car);
                       const title =
                         [car.make, car.model].filter(Boolean).join(" ") ||
                         "Vehicle";
@@ -339,6 +340,32 @@ export default function Header1({
                               style={{ marginRight: "10px", width: "16px" }}
                             />
                             {t("general.profile_settings")}
+                          </Link>
+                        </li>
+                        <li>
+                          <Link
+                            href="/sale-history"
+                            onClick={() => setUserMenuOpen(false)}
+                            style={{
+                              display: "block",
+                              padding: "12px 18px",
+                              fontSize: "14px",
+                              color: "#333",
+                              textDecoration: "none",
+                              transition: "background 0.2s",
+                            }}
+                            onMouseEnter={(e) =>
+                              (e.currentTarget.style.background = "#f7f7f7")
+                            }
+                            onMouseLeave={(e) =>
+                              (e.currentTarget.style.background = "transparent")
+                            }
+                          >
+                            <i
+                              className="fa-regular fa-clock-rotate-left"
+                              style={{ marginRight: "10px", width: "16px" }}
+                            />
+                            {t("sale_history.title")}
                           </Link>
                         </li>
                         <li>

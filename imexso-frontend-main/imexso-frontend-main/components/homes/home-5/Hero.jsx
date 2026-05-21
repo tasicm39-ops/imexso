@@ -7,9 +7,15 @@ import {apiGet} from "@/lib/api";
 import {useAuth} from "@/context/AuthContext";
 import {useLocale} from "@/context/LocaleContext";
 
+import HomePublicWelcome from "@/components/homes/home-5/HomePublicWelcome";
+
 export default function Hero() {
   const {isAuthenticated, isValidated} = useAuth();
   const {t} = useLocale();
+
+  if (!isAuthenticated || !isValidated) {
+    return <HomePublicWelcome />;
+  }
   const router = useRouter();
   const [filterOptions, setFilterOptions] = useState(null);
   const [selectedCondition, setSelectedCondition] = useState("");

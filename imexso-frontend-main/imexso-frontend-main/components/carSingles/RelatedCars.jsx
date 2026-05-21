@@ -1,36 +1,14 @@
 "use client";
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import Slider from "react-slick";
 import Link from "next/link";
 import { apiGet } from "@/lib/api";
+import CarPhoto from "@/components/common/CarPhoto";
+import { getCarImageUrl } from "@/lib/carDisplay";
 
 function formatPrice(price) {
   if (!price && price !== 0) return "N/A";
   return "€" + Math.round(price).toLocaleString();
-}
-
-function CarImage({ src, alt, width, height }) {
-  const [error, setError] = useState(false);
-  if (error || !src) {
-    return (
-      <div style={{ width: "100%", height: "220px", display: "flex", alignItems: "center", justifyContent: "center", background: "#e9ecef", color: "#999", fontSize: "14px" }}>
-        No Preview
-      </div>
-    );
-  }
-  return (
-    <Image
-      alt={alt}
-      src={src}
-      width={width}
-      height={height}
-      className="related-car-card-img"
-      sizes="(max-width: 767px) 100vw, 329px"
-      unoptimized
-      onError={() => setError(true)}
-    />
-  );
 }
 
 export default function RelatedCars({ make, currentCarId }) {
@@ -83,7 +61,7 @@ export default function RelatedCars({ make, currentCarId }) {
           className="car-slider-three car-slider-three--related wow fadeInUp"
         >
           {cars.map((car) => {
-            const imageUrl = car.photos?.[0]?.url || null;
+            const imageUrl = getCarImageUrl(car);
             const title = [car.make, car.model].filter(Boolean).join(" ") || "Unknown Vehicle";
             return (
               <div key={car.id} className="car-block-three col-12">
@@ -92,7 +70,7 @@ export default function RelatedCars({ make, currentCarId }) {
                     <div className="slider-thumb">
                       <div className="image">
                         <Link href={`/car/${car.id_produit}`}>
-                          <CarImage src={imageUrl} alt={title} width={329} height={220} />
+                          <CarPhoto src={imageUrl} alt={title} width={329} height={220} variant="slider" className="related-car-card-img" />
                         </Link>
                       </div>
                     </div>

@@ -1,6 +1,7 @@
 "use client";
-import Image from "next/image";
 import Slider from "react-slick";
+import CarPhoto from "@/components/common/CarPhoto";
+import { getCarImageUrl } from "@/lib/carDisplay";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { apiGet } from "@/lib/api";
@@ -11,38 +12,6 @@ import { useHomeCarSlidesToShow } from "@/hooks/useHomeCarSlidesToShow";
 function formatPrice(price) {
   if (!price && price !== 0) return "N/A";
   return "€" + Math.round(price).toLocaleString();
-}
-
-function CarImage({ src, alt, width, height }) {
-  const [error, setError] = useState(false);
-  if (error || !src) {
-    return (
-      <div
-        style={{
-          width: "100%",
-          height: "220px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          background: "#e9ecef",
-          color: "#999",
-          fontSize: "14px",
-        }}
-      >
-        No Preview
-      </div>
-    );
-  }
-  return (
-    <Image
-      alt={alt}
-      src={src}
-      width={width}
-      height={height}
-      unoptimized
-      onError={() => setError(true)}
-    />
-  );
 }
 
 export default function Cars() {
@@ -74,40 +43,7 @@ export default function Cars() {
   }, [isAuthenticated, isValidated]);
 
   if (!isAuthenticated || !isValidated) {
-    return (
-      <section className="cars-section-eight pt-0">
-        <div className="boxcar-container">
-          <div className="boxcar-title text-center wow fadeInUp">
-            <h2>{t("home.most_searched_cars")}</h2>
-          </div>
-          <div className="d-flex flex-column justify-content-center align-items-center" style={{ minHeight: "200px" }}>
-            <p>{t("home.log_in_to_browse")}</p>
-            <Link
-              href="/login"
-              className="mt-3"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "8px",
-                padding: "12px 36px",
-                background: "#405FF2",
-                color: "#fff",
-                fontSize: "15px",
-                fontWeight: 600,
-                borderRadius: "12px",
-                textDecoration: "none",
-                transition: "background 0.2s",
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = "#0146a6")}
-              onMouseLeave={(e) => (e.currentTarget.style.background = "#405FF2")}
-            >
-              {t("general.log_in")}
-              <Image alt="" src="/images/arrow.svg" width={14} height={14} />
-            </Link>
-          </div>
-        </div>
-      </section>
-    );
+    return null;
   }
 
   if (loading) {
@@ -145,7 +81,7 @@ export default function Cars() {
               className="row car-slider-three"
             >
               {cars.map((car) => {
-                const imageUrl = car.photos?.[0]?.url || null;
+                const imageUrl = getCarImageUrl(car);
                 const title = [car.make, car.model].filter(Boolean).join(" ") || "Unknown Vehicle";
                 return (
                   <div key={car.id} className="box-car car-block-five col-lg-3 col-md-6 col-sm-12">
@@ -154,7 +90,7 @@ export default function Cars() {
                         <div className="slider-thumb">
                           <div className="image">
                             <Link href={`/car/${car.id_produit}`}>
-                              <CarImage src={imageUrl} alt={title} width={329} height={220} />
+                              <CarPhoto src={imageUrl} alt={title} width={329} height={220} variant="slider" />
                             </Link>
                           </div>
                         </div>

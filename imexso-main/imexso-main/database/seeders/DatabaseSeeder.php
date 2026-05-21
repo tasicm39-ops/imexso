@@ -28,6 +28,7 @@ class DatabaseSeeder extends Seeder
                     'is_validated' => true,
                     'is_seller' => false,
                     'is_admin' => true,
+                    'legacy_client_id' => 'C1234',
                 ]
             );
         }

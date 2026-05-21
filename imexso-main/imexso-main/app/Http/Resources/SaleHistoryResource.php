@@ -20,7 +20,7 @@ class SaleHistoryResource extends JsonResource
             'make' => $this->make,
             'model' => $this->model,
             'trim_level' => $this->trim_level,
-            'radio_code' => $this->radio_code,
+            'retention_date' => $this->carByReference?->retention_date?->format('Y-m-d'),
             'color' => $this->color,
             'location' => $this->location,
             'price' => $this->price,

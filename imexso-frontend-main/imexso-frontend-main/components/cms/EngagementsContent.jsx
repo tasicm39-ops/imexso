@@ -3,6 +3,7 @@
 import { useLocale } from "@/context/LocaleContext";
 import { cmsImage } from "@/lib/cmsPaths";
 import CmsBandTitle from "./CmsBandTitle";
+import CmsMediaTextRow from "./CmsMediaTextRow";
 import CmsPageShell from "./CmsPageShell";
 
 function T({ k }) {
@@ -24,7 +25,8 @@ export default function EngagementsContent() {
         </div>
       </section>
 
-      {/* SERVICES DE QUALITE */}
+      {/* --- SAKRIVENO (mockup): SERVICES DE QUALITE — odkomentariši ceo blok ispod --- */}
+      {/*
       <section className="pb-3">
         <div className="container-fluid px-0">
           <h2 className="cms-engagement-part text-center mb-0">
@@ -32,7 +34,7 @@ export default function EngagementsContent() {
           </h2>
         </div>
 
-        <CmsBandTitle>
+        <CmsBandTitle variant="dark">
           <T k="dic_engagements_GARANTIES" />
         </CmsBandTitle>
         <div className="cms-section-body py-3">
@@ -40,7 +42,6 @@ export default function EngagementsContent() {
             <div className="row g-0">
               <div className="col-md-3">
                 <div className="cms-bg-tint h-100">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={cmsImage("documentsapp.jpg")}
                     alt=""
@@ -91,7 +92,6 @@ export default function EngagementsContent() {
                       .
                     </li>
                   </ul>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={cmsImage("traxio.jpg")}
                     alt=""
@@ -111,19 +111,14 @@ export default function EngagementsContent() {
           </div>
         </div>
 
-        <CmsBandTitle>
+        <CmsBandTitle variant="dark">
           <T k="dic_engagements_QUALITY_CHECK" />
         </CmsBandTitle>
         <div className="cms-section-body py-3">
           <div className="boxcar-container">
             <div className="row g-0">
               <div className="col-md-3">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={cmsImage("Imexso_2556.jpg")}
-                  alt=""
-                  className="w-100"
-                />
+                <img src={cmsImage("Imexso_2556.jpg")} alt="" className="w-100" />
               </div>
               <div className="col-md-9">
                 <div className="h-100 pt-4 px-4 pb-3 cms-bg-tint">
@@ -171,14 +166,13 @@ export default function EngagementsContent() {
           </div>
         </div>
 
-        <CmsBandTitle>
+        <CmsBandTitle variant="dark">
           <T k="dic_engagements_REMISE_NEUF" />
         </CmsBandTitle>
         <div className="cms-section-body py-3 pb-5">
           <div className="boxcar-container">
             <div className="row g-0">
               <div className="col-md-3">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={cmsImage("pneus3.jpg")} alt="" className="w-100" />
               </div>
               <div className="col-md-9">
@@ -216,173 +210,145 @@ export default function EngagementsContent() {
           </div>
         </div>
       </section>
+      */}
 
-      {/* AVANTAGES FINANCIERS */}
-      <section className="pb-3">
-        <div className="container-fluid px-0">
-          <h2 className="cms-engagement-part text-center mb-4">
+      {/* --- AKTIVNO (mockup): samo REMISES IMPORTANTES pod AVANTAGES FINANCIERS --- */}
+      <section className="pb-5">
+        <div className="container-fluid px-0 mb-4">
+          <h2 className="cms-engagement-part text-center mb-0">
             <T k="dic_engagements_AVANTAGES_FINANCIERS" />
           </h2>
         </div>
 
-        <CmsBandTitle>
+        {/* SAKRIVENO: REPRISE DE VÉHICULE — odkomentariši blok ispod */}
+        {/*
+        <CmsBandTitle variant="dark">
           <T k="dic_engagements_REPRISE_VÉHICULE" />
         </CmsBandTitle>
-        <div className="cms-section-body py-3">
+        <CmsMediaTextRow image="05042019-_CD20397.jpg">
+          <p className="fw-bold">
+            <T k="dic_engagements_Imexso_reprend_vehicule" />
+          </p>
+          <ul className="ps-3 mb-0">
+            <li className="mb-2">
+              <T k="dic_engagements_Devis_gratuit_1" />{" "}
+              <strong>
+                <T k="dic_engagements_Devis_gratuit_2" />
+              </strong>
+            </li>
+            <li className="mb-2">
+              <strong>
+                <T k="dic_engagements_Paiement_cash_1" />
+              </strong>{" "}
+              <T k="dic_engagements_Paiement_cash_2" />
+            </li>
+            <li className="mb-2">
+              <strong>
+                <T k="dic_engagements_controle_technique_1" />
+              </strong>{" "}
+              <T k="dic_engagements_controle_technique_2" />
+            </li>
+            <li className="mb-2">
+              <T k="dic_engagements_Reprise_etat_1" />{" "}
+              <strong>
+                <T k="dic_engagements_Reprise_etat_2" />
+              </strong>
+            </li>
+            <li className="mb-2">
+              <strong>
+                <T k="dic_engagements_Meilleur_prix_marche_1" />
+              </strong>{" "}
+              <T k="dic_engagements_Meilleur_prix_marche_2" />
+            </li>
+            <li className="mb-2">
+              <T k="dic_engagements_Prestation_sans_frais_1" />{" "}
+              <strong>
+                <T k="dic_engagements_Prestation_sans_frais_2" />
+              </strong>
+            </li>
+          </ul>
+        </CmsMediaTextRow>
+        */}
+
+        <div className="cms-engagement-block">
           <div className="boxcar-container">
-            <div className="row g-0">
-              <div className="col-md-3">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={cmsImage("05042019-_CD20397.jpg")}
-                  alt=""
-                  className="w-100"
-                />
-              </div>
-              <div className="col-md-9">
-                <div className="h-100 pt-4 px-4 pb-3 cms-bg-tint">
-                  <p className="fw-bold">
-                    <T k="dic_engagements_Imexso_reprend_vehicule" />
-                  </p>
-                  <ul className="ps-3">
-                    <li className="mb-2">
-                      <T k="dic_engagements_Devis_gratuit_1" />{" "}
-                      <strong>
-                        <T k="dic_engagements_Devis_gratuit_2" />
-                      </strong>
-                    </li>
-                    <li className="mb-2">
-                      <strong>
-                        <T k="dic_engagements_Paiement_cash_1" />
-                      </strong>{" "}
-                      <T k="dic_engagements_Paiement_cash_2" />
-                    </li>
-                    <li className="mb-2">
-                      <strong>
-                        <T k="dic_engagements_controle_technique_1" />
-                      </strong>{" "}
-                      <T k="dic_engagements_controle_technique_2" />
-                    </li>
-                    <li className="mb-2">
-                      <T k="dic_engagements_Reprise_etat_1" />{" "}
-                      <strong>
-                        <T k="dic_engagements_Reprise_etat_2" />
-                      </strong>
-                    </li>
-                    <li className="mb-2">
-                      <strong>
-                        <T k="dic_engagements_Meilleur_prix_marche_1" />
-                      </strong>{" "}
-                      <T k="dic_engagements_Meilleur_prix_marche_2" />
-                    </li>
-                    <li className="mb-2">
-                      <T k="dic_engagements_Prestation_sans_frais_1" />{" "}
-                      <strong>
-                        <T k="dic_engagements_Prestation_sans_frais_2" />
-                      </strong>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </div>
+            <h3 className="cms-engagement-block-title">
+              <T k="dic_engagements_REMISE_IMPORTANTES" />
+            </h3>
           </div>
+          <CmsMediaTextRow image="parc4.jpg">
+            <p className="cms-engagement-block-lead fw-bold mb-3">
+              <T k="dic_engagements_30_ans_experience" />
+            </p>
+            <ul className="cms-engagement-block-list mb-3">
+              <li>
+                <T k="dic_engagements_Ventes_publiques" />
+              </li>
+              <li>
+                <T k="dic_engagements_Retour_location" />
+              </li>
+              <li>
+                <T k="dic_engagements_Stock_invendus" />
+              </li>
+              <li>
+                <T k="dic_engagements_Vehicule_direction" />
+              </li>
+            </ul>
+            <p className="cms-engagement-block-lead fw-bold mb-0">
+              <T k="dic_engagements_Garanties_meilleur_prix" />
+            </p>
+          </CmsMediaTextRow>
         </div>
 
-        <CmsBandTitle>
-          <T k="dic_engagements_REMISE_IMPORTANTES" />
-        </CmsBandTitle>
-        <div className="cms-section-body py-3">
+        {/* SAKRIVENO: FORMULES DE FINANCEMENT — odkomentariši blok ispod */}
+        {/*
+        <div className="cms-engagement-block">
           <div className="boxcar-container">
-            <div className="row g-0">
-              <div className="col-md-3">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={cmsImage("parc4.jpg")} alt="" className="w-100" />
-              </div>
-              <div className="col-md-9">
-                <div className="h-100 pt-4 px-4 pb-3 cms-bg-tint">
-                  <p className="fw-bold">
-                    <T k="dic_engagements_30_ans_experience" />
-                  </p>
-                  <ul className="ps-3">
-                    <li className="mb-2">
-                      <T k="dic_engagements_Ventes_publiques" />
-                    </li>
-                    <li className="mb-2">
-                      <T k="dic_engagements_Retour_location" />
-                    </li>
-                    <li className="mb-2">
-                      <T k="dic_engagements_Stock_invendus" />
-                    </li>
-                    <li className="mb-2">
-                      <T k="dic_engagements_Vehicule_direction" />
-                    </li>
-                  </ul>
-                  <p className="fw-bold">
-                    <T k="dic_engagements_Garanties_meilleur_prix" />
-                  </p>
-                </div>
-              </div>
-            </div>
+            <h3 className="cms-engagement-block-title">
+              <T k="dic_engagements_FORMULES_FINANCEMENT" />
+            </h3>
           </div>
+          <CmsMediaTextRow image="finscreen.jpg">
+            <p className="cms-engagement-block-lead fw-bold mb-3">
+              <T k="dic_engagements_Souhaite_financer" />
+            </p>
+            <ul className="cms-engagement-block-list mb-0">
+              <li>
+                <T k="dic_engagements_Avec_sans_accompte_1" />{" "}
+                <strong>
+                  <T k="dic_engagements_Avec_sans_accompte_2" />
+                </strong>
+              </li>
+              <li>
+                <T k="dic_engagements_Avec_sans_valeur_1" />{" "}
+                <strong>
+                  <T k="dic_engagements_Avec_sans_valeur_2" />
+                </strong>
+              </li>
+              <li>
+                <T k="dic_engagements_Plusieurs_formules_1" />{" "}
+                <strong>
+                  <T k="dic_engagements_Plusieurs_formules_2" />
+                </strong>
+              </li>
+              <li>
+                <T k="dic_engagements_Simulez_financement_1" />{" "}
+                <strong>
+                  <T k="dic_engagements_Simulez_financement_2" />
+                </strong>{" "}
+                <T k="dic_engagements_Simulez_financement_3" />
+              </li>
+              <li>
+                <T k="dic_engagements_FSMA" />
+              </li>
+            </ul>
+          </CmsMediaTextRow>
         </div>
-
-        <CmsBandTitle>
-          <T k="dic_engagements_FORMULES_FINANCEMENT" />
-        </CmsBandTitle>
-        <div className="cms-section-body py-3 pb-5">
-          <div className="boxcar-container">
-            <div className="row g-0">
-              <div className="col-md-3">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={cmsImage("finscreen.jpg")}
-                  alt=""
-                  className="w-100"
-                />
-              </div>
-              <div className="col-md-9">
-                <div className="h-100 pt-4 px-4 pb-3 cms-bg-tint">
-                  <p className="fw-bold">
-                    <T k="dic_engagements_Souhaite_financer" />
-                  </p>
-                  <ul className="ps-3">
-                    <li className="mb-2">
-                      <T k="dic_engagements_Avec_sans_accompte_1" />{" "}
-                      <strong>
-                        <T k="dic_engagements_Avec_sans_accompte_2" />
-                      </strong>
-                    </li>
-                    <li className="mb-2">
-                      <T k="dic_engagements_Avec_sans_valeur_1" />{" "}
-                      <strong>
-                        <T k="dic_engagements_Avec_sans_valeur_2" />
-                      </strong>
-                    </li>
-                    <li className="mb-2">
-                      <T k="dic_engagements_Plusieurs_formules_1" />{" "}
-                      <strong>
-                        <T k="dic_engagements_Plusieurs_formules_2" />
-                      </strong>
-                    </li>
-                    <li className="mb-2">
-                      <T k="dic_engagements_Simulez_financement_1" />{" "}
-                      <strong>
-                        <T k="dic_engagements_Simulez_financement_2" />
-                      </strong>{" "}
-                      <T k="dic_engagements_Simulez_financement_3" />
-                    </li>
-                    <li className="mb-2">
-                      <T k="dic_engagements_FSMA" />
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        */}
       </section>
 
-      {/* TEMOIGNAGES */}
+      {/* --- SAKRIVENO (mockup): TÉMOIGNAGES / CLIENTS SATISFAITS — odkomentariši ceo blok ispod --- */}
+      {/*
       <section className="pb-5">
         <div className="boxcar-container text-center mb-3">
           <h2 className="fw-bold mb-2">
@@ -392,7 +358,7 @@ export default function EngagementsContent() {
             <T k="dic_engagements_AUTO_RISQUE_ZERO" />
           </h3>
         </div>
-        <CmsBandTitle>
+        <CmsBandTitle variant="dark">
           <T k="dic_engagements_CLIENTS_SATISFAITS" />
         </CmsBandTitle>
         <div className="cms-section-body py-3">
@@ -400,7 +366,6 @@ export default function EngagementsContent() {
             <div className="row g-0">
               <div className="col-md-3">
                 <div className="cms-bg-tint h-100">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={cmsImage("cust.jpg")}
                     alt=""
@@ -433,6 +398,7 @@ export default function EngagementsContent() {
           </div>
         </div>
       </section>
+      */}
     </CmsPageShell>
   );
 }

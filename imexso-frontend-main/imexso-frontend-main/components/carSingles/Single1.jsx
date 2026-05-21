@@ -13,6 +13,7 @@ import { useLocale } from "@/context/LocaleContext";
 import FavouriteButton from "@/components/common/FavouriteButton";
 import AddToCartButton from "@/components/common/AddToCartButton";
 import SendOfferForm from "./sections/SendOfferForm";
+import { DEFAULT_CAR_IMAGE, getCarImageUrl } from "@/lib/carDisplay";
 
 function formatPrice(price) {
   if (!price && price !== 0) return "N/A";
@@ -41,7 +42,7 @@ export default function Single1({
 
   const isAvailable = carItem.sync_status === "active";
   const photos = carItem.photos || [];
-  const mainPhoto = photos[0]?.url || "/images/placeholder-car.png";
+  const mainPhoto = getCarImageUrl(carItem);
   const galleryPhotos = photos.slice(1, 5);
   const title = getCarTitle(carItem);
   const marketing = carItem.marketing;
@@ -261,8 +262,7 @@ export default function Single1({
                                       style={{ width: "100%", height: "100%", objectFit: "cover" }}
                                 onError={(e) => {
                                   e.target.onerror = null;
-                                  e.target.style.display = "none";
-                                  e.target.parentElement.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:400px;background:#e9ecef;color:#888;font-size:16px;font-weight:500">No Preview</div>';
+                                  e.target.src = DEFAULT_CAR_IMAGE;
                                 }}
                               />
                             </a>
@@ -311,8 +311,7 @@ export default function Single1({
                                       style={{ width: "100%", height: "100%", objectFit: "cover" }}
                                       onError={(e) => {
                                         e.target.onerror = null;
-                                        e.target.style.display = "none";
-                                        e.target.parentElement.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;min-height:130px;background:#e9ecef;color:#888;font-size:13px">No Preview</div>';
+                                        e.target.src = DEFAULT_CAR_IMAGE;
                                       }}
                                     />
                                   </a>
@@ -323,7 +322,8 @@ export default function Single1({
                         </div>
                       </div>
                     ))}
-                    {galleryPhotos.length < 4 &&
+                    {photos.length > 0 &&
+                      galleryPhotos.length < 4 &&
                       Array.from({ length: 4 - galleryPhotos.length }).map(
                         (_, i) => (
                           <div

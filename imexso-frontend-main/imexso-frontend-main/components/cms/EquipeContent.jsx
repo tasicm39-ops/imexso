@@ -75,11 +75,6 @@ export default function EquipeContent() {
                   phone: "+32 (0)2 361 52 59",
                 },
                 {
-                  img: "Imexso_0249.jpg",
-                  name: "Waleed",
-                  phone: "+32 (0)2 365 08 79",
-                },
-                {
                   img: "_CD29530.jpg",
                   name: null,
                   wide: true,

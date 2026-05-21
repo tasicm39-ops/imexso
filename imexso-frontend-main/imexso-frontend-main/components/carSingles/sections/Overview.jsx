@@ -2,6 +2,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
+import RetentionDisplay from "@/components/common/RetentionDisplay";
 import { useLocale } from "@/context/LocaleContext";
 
 function formatMileage(km) {
@@ -13,6 +14,24 @@ export default function Overview({ carItem }) {
   const { t } = useLocale();
 
   if (!carItem) return null;
+
+  const retentionDetail = carItem.retention_date
+    ? [
+        {
+          icon: "/images/resource/overview-icon-retention.png",
+          label: t("car.retention"),
+          value: (
+            <RetentionDisplay
+              retentionDate={carItem.retention_date}
+              label=""
+              className="overview-retention"
+            />
+          ),
+          width: 18,
+          height: 18,
+        },
+      ]
+    : [];
 
   const vehicleDetails = [
     {
@@ -64,6 +83,7 @@ export default function Overview({ carItem }) {
       width: 18,
       height: 18,
     },
+    ...retentionDetail,
   ];
 
   const vehicleAdditionalDetails = [

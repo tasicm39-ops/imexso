@@ -43,6 +43,7 @@
         .section-title { font-size: 14px; font-weight: bold; color: #002833; margin-bottom: 10px; }
         .validity-notice { margin-top: 8px; font-size: 10px; }
         .legal-notice { color: red; margin-top: 8px; font-size: 10px; }
+        .retention-value { color: #e67e22; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -88,6 +89,12 @@
             <tr><td class="label">Finition</td><td class="value">{{ $car->trim_level }}</td></tr>
             <tr><td class="label">Carburant</td><td class="value">{{ $car->fuel_type }}</td></tr>
             <tr><td class="label">Puissance</td><td class="value">{{ $car->horsepower }} HP</td></tr>
+            @if($car->retention_date)
+                <tr>
+                    <td class="label">Rétention</td>
+                    <td class="value retention-value">{{ $car->retention_date->format('d/m/Y') }}</td>
+                </tr>
+            @endif
             <tr><td class="label">Cylindrée</td><td class="value">{{ $car->engine_displacement }}</td></tr>
             <tr><td class="label">Boîte</td><td class="value">{{ $car->gearbox }}</td></tr>
             <tr><td class="label">Couleur</td><td class="value">{{ $car->color }}</td></tr>

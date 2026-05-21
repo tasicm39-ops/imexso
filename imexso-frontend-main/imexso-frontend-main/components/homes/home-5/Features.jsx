@@ -1,11 +1,35 @@
 "use client";
 import React from "react";
+import { useRouter } from "next/navigation";
 import { useLocale } from "@/context/LocaleContext";
 
-export default function Features() {
+export default function Features({ redirectGuestsToLogin = false }) {
   const { t } = useLocale();
+  const router = useRouter();
+
   return (
-    <section className="why-choose-us-section-three pt-0">
+    <section
+      className={`why-choose-us-section-three pt-0${redirectGuestsToLogin ? " home-features--guest" : ""}`}
+      onClick={
+        redirectGuestsToLogin
+          ? () => {
+              router.push("/login");
+            }
+          : undefined
+      }
+      onKeyDown={
+        redirectGuestsToLogin
+          ? (e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                router.push("/login");
+              }
+            }
+          : undefined
+      }
+      role={redirectGuestsToLogin ? "link" : undefined}
+      tabIndex={redirectGuestsToLogin ? 0 : undefined}
+    >
       <div className="large-container">
         <div className="right-box">
           <div className="boxcar-title text-center wow fadeInUp">

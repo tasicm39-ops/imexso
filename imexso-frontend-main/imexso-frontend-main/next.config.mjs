@@ -6,6 +6,11 @@ const nextConfig = {
                 protocol: 'https',
                 hostname: 'photos.imexso.com',
             },
+            {
+                protocol: 'https',
+                hostname: 'www.imexso.com',
+                pathname: '/ui/images/**',
+            },
         ],
     },
     async rewrites() {

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AnnouncementController;
+use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\Api\ApiClientController;
 use App\Http\Controllers\Api\CarCartController;
 use App\Http\Controllers\Api\CarController;
@@ -25,6 +26,10 @@ Route::post('vat/validate', [VatValidationController::class, 'validate'])
     ->name('api.vat.validate');
 
 Route::get('site-pages/{slug}', [SitePageController::class, 'show'])->name('api.site-pages.show');
+
+Route::post('contact', [ContactController::class, 'store'])
+    ->middleware('throttle:10,1')
+    ->name('api.contact.store');
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('user', function (Request $request) {

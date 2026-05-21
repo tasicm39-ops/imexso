@@ -1,10 +1,17 @@
 "use client";
 import React from "react";
 import Link from "next/link";
+import { useAuth } from "@/context/AuthContext";
 import { useLocale } from "@/context/LocaleContext";
 
 export default function Cta() {
+  const { isAuthenticated, isValidated } = useAuth();
   const { t } = useLocale();
+
+  if (!isAuthenticated || !isValidated) {
+    return null;
+  }
+
   return (
     <section className="blog-section-two pt-0 section-radius-bottom bg-white">
       <div className="boxcar-container">

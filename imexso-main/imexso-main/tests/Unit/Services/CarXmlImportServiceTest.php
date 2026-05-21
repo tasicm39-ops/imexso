@@ -219,6 +219,20 @@ class CarXmlImportServiceTest extends TestCase
         $this->assertSame(2024, $this->service->mapXmlItemToCarAttributes($items[0])['manufacturing_year']);
     }
 
+    public function test_map_xml_item_maps_retention_date_from_xml(): void
+    {
+        $xml = $this->service->parseXml($this->buildMinimalXmlWithEmptyFields(
+            dateImmat: '2024-06-29',
+            dateCrea: '',
+            retention: '2026-06-01',
+        ));
+        $items = $this->service->extractItems($xml);
+
+        $attributes = $this->service->mapXmlItemToCarAttributes($items[0]);
+
+        $this->assertSame('2026-06-01', $attributes['retention_date']);
+    }
+
     public function test_map_xml_item_handles_nullable_fields(): void
     {
         $xml = $this->service->parseXml($this->buildMinimalXmlWithEmptyFields());
@@ -461,10 +475,14 @@ class CarXmlImportServiceTest extends TestCase
 XML;
     }
 
-    private function buildMinimalXmlWithEmptyFields(?string $dateImmat = null, ?string $dateCrea = null): string
-    {
+    private function buildMinimalXmlWithEmptyFields(
+        ?string $dateImmat = null,
+        ?string $dateCrea = null,
+        ?string $retention = null,
+    ): string {
         $dateImmat = $dateImmat ?? '';
         $dateCrea = $dateCrea ?? '';
+        $retention = $retention ?? '';
 
         return <<<XML
 <?xml version="1.0" encoding="UTF-8"?>
@@ -502,7 +520,7 @@ XML;
 <tva>TTC</tva>
 <statut><![CDATA[En stock%%Auf Lager%%On Stock%%Stock]]></statut>
 <date_immat>{$dateImmat}</date_immat>
-<retention></retention>
+<retention>{$retention}</retention>
 <date_depart_garantie></date_depart_garantie>
 <portes></portes>
 <photos>

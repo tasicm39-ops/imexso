@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Api;
 
+use App\Models\Car;
 use App\Models\SaleHistory;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -119,5 +120,39 @@ class SaleHistoryTest extends TestCase
         $this->actingAs($this->user)
             ->getJson(route('api.sale-histories.show', 99999))
             ->assertNotFound();
+    }
+
+    public function test_list_sale_histories_scoped_to_authenticated_client_when_legacy_id_set(): void
+    {
+        $user = User::factory()->validated()->create(['legacy_client_id' => 'C1234']);
+
+        SaleHistory::factory()->count(2)->create(['client_id' => 'C1234']);
+        SaleHistory::factory()->create(['client_id' => 'C9999']);
+
+        $response = $this->actingAs($user)
+            ->getJson(route('api.sale-histories.index'));
+
+        $response->assertOk()
+            ->assertJsonCount(2, 'data');
+    }
+
+    public function test_sale_history_includes_retention_date_from_matching_car(): void
+    {
+        Car::factory()->create([
+            'id' => 100001,
+            'id_produit' => 'O138454',
+            'retention_date' => '2026-06-01',
+        ]);
+
+        $history = SaleHistory::factory()->create([
+            'id_produit' => 'O138454',
+            'client_id' => 'C1412',
+        ]);
+
+        $this->actingAs($this->user)
+            ->getJson(route('api.sale-histories.show', $history))
+            ->assertOk()
+            ->assertJsonPath('data.retention_date', '2026-06-01')
+            ->assertJsonMissingPath('data.radio_code');
     }
 }

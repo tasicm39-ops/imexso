@@ -955,7 +955,7 @@ class CarXmlImportService
                 'nl' => 'Verkocht',
             ],
             'registration_date' => $this->extractNullableDate($item, 'date_immat'),
-            'retention_date' => null,
+            'retention_date' => $this->extractNullableDate($item, 'retention'),
             'warranty_start_date' => null,
             'doors' => $this->extractNullableInt($item, 'portes'),
             'category' => $this->extractNullableString($item, 'categorie'),

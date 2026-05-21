@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import Image from "next/image";
 import Link from "next/link";
+import CarPhoto from "@/components/common/CarPhoto";
+import { getCarImageUrl } from "@/lib/carDisplay";
 import Header1 from "@/components/headers/Header1";
 import Footer1 from "@/components/footers/Footer1";
 import FavouriteButton from "@/components/common/FavouriteButton";
@@ -21,13 +22,6 @@ function formatMileage(km) {
 
 function getCarTitle(car) {
   return [car.make, car.model].filter(Boolean).join(" ") || "Unknown Vehicle";
-}
-
-function getCarImage(car) {
-  if (car.photos && car.photos.length > 0) {
-    return car.photos[0].url;
-  }
-  return null;
 }
 
 export default function FavouritesPage() {
@@ -122,7 +116,7 @@ export default function FavouritesPage() {
                 {favourites.map((fav) => {
                   const car = fav.car;
                   if (!car) return null;
-                  const imageUrl = getCarImage(car);
+                  const imageUrl = getCarImageUrl(car);
                   const title = getCarTitle(car);
 
                   return (
@@ -130,20 +124,13 @@ export default function FavouritesPage() {
                       <div className="favourite-card">
                         <div className="favourite-card__image">
                           <Link href={`/car/${car.id_produit}`}>
-                            {imageUrl ? (
-                              <Image
-                                src={imageUrl}
-                                alt={title}
-                                width={400}
-                                height={240}
-                                style={{ width: "100%", height: "100%", objectFit: "contain", background: "#f5f5f5" }}
-                                unoptimized
-                              />
-                            ) : (
-                              <div className="favourite-card__placeholder">
-                                {t("general.no_preview")}
-                              </div>
-                            )}
+                            <CarPhoto
+                              src={imageUrl}
+                              alt={title}
+                              width={400}
+                              height={240}
+                              variant="card"
+                            />
                           </Link>
                           <div className="favourite-card__fav-btn">
                             <FavouriteButton
